@@ -6,10 +6,14 @@ information to the ground, but no science data will be generated.
 ## Needs from OBC
 
 The interface to COMMS is a UART at 1200 baud.  Because the Raspberry Pi only
-has two hardware UARTs, it is possible that this UART will need to be created in
-software, especially since it is running at such a slow baud rate. One link I
-found that will help for this use is
+has two hardware UARTs, it is possible that this UART will need to be created
+in software, especially since it is running at such a slow baud rate. One link
+I found that will help for this use is
 [here](http://codeintherightway.blogspot.com/2017/09/soft-uart-implementation-for-raspberry.html).
+Installation instructions are at the [github
+repo](https://github.com/adrianomarto/soft_uart/) for the project. I have
+tested it in trivial loopback tests, and it seems to work well up to 19200
+baud, which is above what we need for the COMMS module.
 
 When the radio starts up, it sends through UART a string containing product
 version and licensing information, followed by the string "cmd: ". At this

@@ -8,15 +8,19 @@ determined yet, but I believe it will be as simple as a thermistor voltage
 divider.
 
 We will be using the MCP3008 SPI ADC because we have some on hand. It has 8
-analog input channels, which is enough for one pressure sensor and 7
-temperature sensor distributed throughout the structure. The MCP3008 has drivers
-in the wiringPi library, it has a simple interface for reading from the analog
-channels.
+analog input channels, which is enough for one pressure sensor and 7 temperature
+sensor distributed throughout the structure. The MCP3008 has drivers in the
+wiringPi library, it has a simple interface for reading from the analog
+channels. It also has Linux drivers configurable through the device tree, so
+both options are possible but wiringPi is simpler to understand, so we will use
+it.
 
 ## Needs from OBC
 
 The OBC is responsible for interfacing to all telemetry sensing hardware. It
-will use an SPI ADC to interface to an analog pressure sensor (Honeywell SSC). 
+will use an SPI ADC to interface to an analog pressure sensor (Honeywell SSC)
+and 7 thermistor temperature sensors distributed in important places throughout
+the structure.
 
 ## Contact
 
