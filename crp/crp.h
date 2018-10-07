@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define CRP_SERIAL_DEVICE	"/dev/ttyserial0"
+
 int crp_sensorRead(char *buffer, int bufSize);
 
 int crp_imageStore(char *buffer, int bufSize, FILE *fd);

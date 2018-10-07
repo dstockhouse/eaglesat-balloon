@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define COMMS_SERIAL_DEVICE	"/dev/ttySOFT0"
+
 int comms_sendPacket(char *buffer, int bufSize);
 
 #endif // EAGLESAT_COMMS_H

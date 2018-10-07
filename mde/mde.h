@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MDE_SERIAL_DEVICE	"/dev/serial1"
+
 int mde_init(void);
 
 int mde_requestPacket(char *buffer, int bufSize);
