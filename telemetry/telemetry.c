@@ -35,7 +35,7 @@ int telemetry_pressureRead(void) {
 /**** Function telemetry_tempRead ****
  *
  */
-int telemetry_tempRead(void) {
+int telemetry_tempRead(int *tempBuf, int tempBufSize) {
 
 
 	return 0;

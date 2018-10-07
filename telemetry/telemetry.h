@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define TELEMETRY_NUM_TEMP_SENSORS	7
+
 int telemetry_pressureRead(void);
 
 int telemetry_tempRead(void);
