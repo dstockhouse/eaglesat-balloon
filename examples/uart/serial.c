@@ -30,8 +30,8 @@
 #include <wiringSerial.h>
 
 #define UART0_DEV	"/dev/ttyUSB0"
-#define UART1_DEV	"/dev/serial0"
-#define BAUD_RATE	115200
+#define UART1_DEV	"/dev/ttySOFT0"
+#define BAUD_RATE	1200
 
 int main(void) {
 
