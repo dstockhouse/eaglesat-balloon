@@ -11,7 +11,8 @@ in stone, just convenient.)
 Commands to send from OBC to MDE, UART characters.
 - Send health data: 0x53
 
-MDE will send science data after each read cycle it is generated.
+MDE will send science data in the form of a 3-byte header (0x808080) followed by
+3 bytes of data after each read cycle it is generated.
 
 ### Health data packet format
 
