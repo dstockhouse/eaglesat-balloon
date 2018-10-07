@@ -13,10 +13,9 @@
  *
  ****************************************************************************/
 
-#ifndef	EAGLESAT__H
-#define	EAGLESAT__H
-
 // User application header files
+
+#include "myHeader.h"
 
 #include "es_control.h"
 #include "comms/comms.h"
@@ -33,7 +32,7 @@
 /**** Function myfunc ****
  * 
  */
-int myfunc(void);
+int myfunc(void) {
 
-#endif // EAGLESAT__H
-
+	return 0;
+}
