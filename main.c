@@ -20,6 +20,7 @@
  *
  ****************************************************************************/
 
+#include "es_control.h"
 #include "comms/comms.h"
 #include "crp/crp.h"
 #include "crp/crp_generateFilename.h"
@@ -28,6 +29,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 // For testing program in debug mode
 #define	ES_DEBUG_MODE
@@ -54,12 +56,17 @@ int main() {
 	// Telemetry variables
 	float temperature[TELEMETRY_NUM_TEMP_SENSORS], pressure;
 
+	// Time variables
+	struct timespec missionStartTime, missionCurrentTime;
+
 	/***** Check device connections *****/
 
 	// Ensure watchdog timer operating
 
 	// Ensure proper scheduling parameters set
 
+	/***** Get mission start time *****/
+	clock_gettime(CLOCK_REALTIME, &missionStartTime);
 
 	/***** Initialize all communication interfaces *****/
 
@@ -160,6 +167,7 @@ int main() {
 #endif
 		}
 
+		// Get current time
 
 		// Generate packet to send to comms
 		packetSize = es_generateCommsPacket(char *commsPacket, MAX_PACKET_SIZE,
@@ -176,6 +184,11 @@ int main() {
 		}
 
 
+		// Delay or poll UART channels
+
+		// Check for comms input
+
+		// Check for MDE input
 
 		// Increment cycle counter for task scheduling
 		cycleCount++;

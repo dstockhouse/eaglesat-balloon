@@ -21,7 +21,6 @@
 
 // User application header files
 
-#include "es_control.h"
 #include "comms/comms.h"
 #include "crp/crp.h"
 #include "crp/crp_generateFilename.h"
@@ -34,7 +33,7 @@
 #include <stdlib.h>
 
 // Constants
-#define MAX_PACKET_SIZE	1024
+#define MAX_COMMS_PACKET_SIZE	1024
 
 
 /**** Function es_generateCommsPacket ****
