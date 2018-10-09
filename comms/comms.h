@@ -12,6 +12,11 @@
  *	Author: David Stockhouse
  *	Changes: Template file created with function comms_sendPacket
  *
+ * Revision 1.1
+ * 	Date: 10/9/18
+ *	Author: David Stockhouse
+ *	Changes: Added comms_init function and serial interface commands
+ *
  ****************************************************************************/
 
 #ifndef EAGLESAT_COMMS_H
@@ -25,9 +30,9 @@
 #define COMMS_COMMAND_START	"K\r"
 #define COMMS_COMMAND_START_LEN	2
 
-int comms_init(char *buffer, int bufSize);
+int comms_init(void);
 
-int comms_sendPacket(char *buffer, int bufSize);
+int comms_sendPacket(int fd, char *buffer, int bufSize);
 
 #endif // EAGLESAT_COMMS_H
 

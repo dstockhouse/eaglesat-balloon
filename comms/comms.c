@@ -11,6 +11,12 @@
  *	Author: David Stockhouse
  *	Changes: Template file created with function comms_sendPacket
  *
+ * Revision 1.1
+ * 	Date: 10/9/18
+ *	Author: David Stockhouse
+ *	Changes: Added comms_init function. Implemented UART receive 
+ *		functionality
+ *
  ****************************************************************************/
 
 #include "comms.h"
