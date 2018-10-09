@@ -30,7 +30,7 @@
  */
 int es_generateCommsPacket(char *packet, int bufferLength,
 		struct timespec *missionTime,
-		int *tempData, int pressureData,
+		float *tempData, float pressureData,
 		char *crpMetadata, char *mdeMetadata) {
 
 	// Length of the packet to be generated
@@ -50,12 +50,68 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 	missionSeconds = missionTime->tv_sec % 3600;
 
 	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-			"T:%d:%d:%d,", missionHours, missionMinutes, missionSeconds);
+			"T:%02d:%02d:%02d,", missionHours, missionMinutes, missionSeconds);
 
 	// Put TLM data into packet
 	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-			"Pt:%d:%d:%d,Ot:%d,Ct:%d,", missionHours, missionMinutes, missionSeconds);
+			"Pt:%03.1f:%03.1f:%03.1f,Ot:%03.1f,Ct:%03.1f,Mt:%03.1f,Rt:%02f,", 
+			tempData[TELEMETRY_TEMP_SENSOR_EPS1],
+			tempData[TELEMETRY_TEMP_SENSOR_EPS2],
+			tempData[TELEMETRY_TEMP_SENSOR_EPS3],
+			tempData[TELEMETRY_TEMP_SENSOR_OBC],
+			tempData[TELEMETRY_TEMP_SENSOR_CRP],
+			tempData[TELEMETRY_TEMP_SENSOR_MDE],
+			tempData[TELEMETRY_TEMP_SENSOR_COMMS]);
+
+	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+			"PR:%03.1f", pressureData);
+
+	// Put metadata from CRP and MDE into packet
+
 
 	return 0;
 }
+
+
+
+/**** Function es_timeDifference ****
+ * Gets the difference between two timespec objects.
+ * Adapted from code written by Dr. Sam Siewert for CEC450
+ */
+int es_timeDifference(struct timespec *stop, struct timespec *start,
+		struct timespec *delta_t)
+{
+  int dt_sec=stop->tv_sec - start->tv_sec;
+  int dt_nsec=stop->tv_nsec - start->tv_nsec;
+
+  if(dt_sec >= 0)
+  {
+    if(dt_nsec >= 0)
+    {
+      delta_t->tv_sec=dt_sec;
+      delta_t->tv_nsec=dt_nsec;
+    }
+    else
+    {
+      delta_t->tv_sec=dt_sec-1;
+      delta_t->tv_nsec=1000000000+dt_nsec;
+    }
+  }
+  else
+  {
+    if(dt_nsec >= 0)
+    {
+      delta_t->tv_sec=dt_sec;
+      delta_t->tv_nsec=dt_nsec;
+    }
+    else
+    {
+      delta_t->tv_sec=dt_sec-1;
+      delta_t->tv_nsec=1000000000+dt_nsec;
+    }
+  }
+
+  return(OK);
+}
+
 

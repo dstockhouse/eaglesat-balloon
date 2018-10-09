@@ -54,7 +54,8 @@ int main() {
 	char commsPacket[MAX_COMMS_PACKET_SIZE];
 
 	// Telemetry variables
-	float temperature[TELEMETRY_NUM_TEMP_SENSORS], pressure;
+	// float temperature[TELEMETRY_NUM_TEMP_SENSORS], pressure;
+	TELEMETRY_DATA telemetry;
 
 	// Time variables
 	struct timespec missionStartTime, missionCurrentTime;
