@@ -22,6 +22,11 @@
 
 #define COMMS_SERIAL_DEVICE	"/dev/ttySOFT0"
 
+#define COMMS_COMMAND_START	"K\r"
+#define COMMS_COMMAND_START_LEN	2
+
+int comms_init(char *buffer, int bufSize);
+
 int comms_sendPacket(char *buffer, int bufSize);
 
 #endif // EAGLESAT_COMMS_H

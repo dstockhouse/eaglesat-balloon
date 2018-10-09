@@ -32,10 +32,10 @@ int mde_init(void) {
 
 	int uart_fd;
 
-	uart_fd = serialOpen(MDE_UART_DEVICE);
+	uart_fd = serialOpen(MDE_SERIAL_DEVICE);
 
 	if(uart_fd == -1) {
-		printf("Failed to open serial device %s\n", MDE_UART_DEVICE);
+		printf("Failed to open serial device %s\n", MDE_SERIAL_DEVICE);
 		return -1;
 	}
 
