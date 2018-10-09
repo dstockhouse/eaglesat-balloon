@@ -12,6 +12,11 @@
  *	Changes: Template file created with functions mde_requestPacket and
  *		mde_init
  *
+ * Revision 1.1
+ * 	Date: 10/9/18
+ *	Author: David Stockhouse
+ *	Changes: Filled in UART functionality
+ *
  ****************************************************************************/
 
 #include "mde.h"
@@ -21,22 +26,46 @@
 
 
 /**** Function mde_init ****
- *
+ * Initializes the UART interface to MDE and returns the UART file descriptor
  */
 int mde_init(void) {
 
+	int uart_fd;
 
-	return 0;
+	uart_fd = serialOpen(MDE_UART_DEVICE);
+
+	if(uart_fd == -1) {
+		printf("Failed to open serial device %s\n", MDE_UART_DEVICE);
+		return -1;
+	}
+
+	return uart_fd;
 
 } // Function mde_init
 
 
-
-/**** Function mde_requestPacket ****
- *
+/**** Function mde_requestHealthPacket ****
+ * Requests a health packet from MDE over UART channel
  */
-int mde_requestPacket(char *buffer, int bufSize) {
+int mde_requestHealthPacket(int fd, char *buffer, int bufSize) {
 
+	int i;
+	char tempInput;
+
+	if(buffer == NULL || bufSize < 6) {
+		printf("Invalid buffer for health packet\n");
+		return -1;
+	}
+
+	// Send byte to request health packet
+	serialPutchar(MDE_COMMAND_HEALTH);
+
+	// Read 6 bytes into UART
+	for(i = 0; i < MDE_PACKET_LENGTH; i++) {
+		// Blocks for 10 seconds - bad
+		// Try a direct read for better results
+		buffer[i] = serialGetChar(fd);
+	}
 
 	return 0;
 
