@@ -81,7 +81,7 @@ int main() {
 	}
 
 	// Initialize UART to COMMS transceiver
-	rc = comms_uartInit();
+	rc = comms_init();
 	if (rc) {
 		// Initialization failed
 #ifdef	ES_DEBUG_MODE
@@ -91,7 +91,7 @@ int main() {
 	}
 
 	// Initialize UART to MDE board
-	rc = mde_uartInit();
+	rc = mde_init();
 	if (rc) {
 		// Initialization failed
 #ifdef	ES_DEBUG_MODE

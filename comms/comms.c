@@ -52,25 +52,13 @@ int comms_init() {
 /**** Function comms_close ****
  * Close down the file descriptors for COMMS
  */
-int comms_init() {
+int comms_close(int fd) {
 
-	int uart_fd;
+	serialClose(fd);
 
-	uart_fd = serialOpen(COMMS_SERIAL_DEVICE);
+	return 0;
 
-	if(uart_fd == -1) {
-		printf("Failed to open serial device %s\n", COMMS_SERIAL_DEVICE);
-		return -1;
-	}
-
-	// Read from UART for sensor initialization console
-
-	// Give UART the start string
-	comms_sendPacket(uart_fd, COMMS_COMMAND_START, 2);
-
-	return uart_fd;
-
-} // Function comms_init
+} // Function comms_close
 
 
 /**** Function comms_sendPacket ****

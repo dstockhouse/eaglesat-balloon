@@ -24,6 +24,9 @@
 #define CRP_SERIAL_DEVICE	"/dev/serial0"
 #define CRP_SERIAL_BAUD		115200
 
+#define CRP_COMMAND_SYNC_INIT	{0xAA, 0x0D, 0x00}
+#define CRP_COMMAND_GETPICTURE_INIT	{0xAA, 0x0D, 0x00}
+
 int crp_sensorRead(char *buffer, int bufSize);
 
 int crp_imageStore(char *buffer, int bufSize, FILE *fd);
