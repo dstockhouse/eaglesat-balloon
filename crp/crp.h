@@ -21,7 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CRP_SERIAL_DEVICE	"/dev/ttyserial0"
+#define CRP_SERIAL_DEVICE	"/dev/serial0"
+#define CRP_SERIAL_BAUD		115200
 
 int crp_sensorRead(char *buffer, int bufSize);
 
