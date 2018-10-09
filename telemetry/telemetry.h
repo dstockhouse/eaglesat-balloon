@@ -23,9 +23,26 @@
 
 #define TELEMETRY_NUM_TEMP_SENSORS	7
 
-int telemetry_pressureRead(void);
+// Indices for each temp sensor
+#define TELEMETRY_TEMP_SENSOR_EPS1	0
+#define TELEMETRY_TEMP_SENSOR_EPS2	1
+#define TELEMETRY_TEMP_SENSOR_EPS3	2
+#define TELEMETRY_TEMP_SENSOR_OBC	3
+#define TELEMETRY_TEMP_SENSOR_CRP	4
+#define TELEMETRY_TEMP_SENSOR_MDE	5
+#define TELEMETRY_TEMP_SENSOR_COMMS	6
 
-int telemetry_tempRead(void);
+// Structure that contains all telemetry of the system
+typedef struct {
+	float temperature[TELEMETRY_NUM_TEMP_SENSORS];
+	float pressure;
+} TELEMETRY_DATA;
+
+int telemetry_allRead(TELEMETRY_DATA *);
+
+int telemetry_pressureRead(float *);
+
+int telemetry_tempRead(float *, int);
 
 #endif // EAGLESAT_TELEMETRY_H
 
