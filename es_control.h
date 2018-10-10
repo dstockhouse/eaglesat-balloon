@@ -21,11 +21,11 @@
 
 // User application header files
 
-#include "comms/comms.h"
-#include "crp/crp.h"
-#include "crp/crp_generateFilename.h"
-#include "mde/mde.h"
-#include "telemetry/telemetry.h"
+// #include "comms/comms.h"
+// #include "crp/crp.h"
+// #include "crp/crp_generateFilename.h"
+// #include "mde/mde.h"
+// #include "telemetry/telemetry.h"
 
 
 // System header files
