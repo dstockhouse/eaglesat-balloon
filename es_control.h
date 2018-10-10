@@ -40,6 +40,8 @@
 
 #define INPUT_BUFFER_LENGTH	16384
 
+#define LOG_FILENAME_LENGTH	64
+
 
 // Metadata for each UART device
 typedef struct {
@@ -57,6 +59,7 @@ typedef struct {
 typedef struct {
 	int uart_fd;
 	char inputBuffer[INPUT_BUFFER_LENGTH];
+	char logFilename[LOG_FILENAME_LENGTH];
 	int inputBufferSize;
 	char outputBuffer[INPUT_BUFFER_LENGTH];
 	int outputBufferSize;

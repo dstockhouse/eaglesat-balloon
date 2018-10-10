@@ -169,3 +169,65 @@ int es_uartGetChar(UART_DEVICE *device)
 }
 
 
+/**** Function es_logString ****
+ * Logs a string into a device
+ */
+int es_uartGetChar(UART_DEVICE *device)
+{
+
+	if(device == NULL) {
+		printf("NULL device for uartGetChar\n");
+		return -1;
+	}
+
+	if(device->inputBufferSize >= INPUT_BUFFER_LENGTH) {
+		printf("Input buffer is full\n");
+		return device->inputBufferSize;
+	}
+
+	if(!serialCharsAvail(device->uart_fd)) {
+		printf("No input chars available\n");
+		return -3;
+	}
+
+	device->inputBuffer[inputBufferSize] = serialRead(device->uart_fd);
+	device->inputBufferSize++;
+
+	return 0;
+}
+
+
+/**** Function es_generateLogFilename ****
+ * Generate a filename that matches the format 
+ * "str-mm.dd.yyyy-hh:mm:ss.log"
+ */
+int es_generateLogFilename(char *buf, int bufSize, char *subsystem) {
+
+	int charsWritten;
+
+	// Time variables
+	time_t t;
+	struct tm currentTime;
+
+	// Get current time in UTC
+	t = time(NULL);
+	currentTime = *localtime(&t);
+
+	// Create filename using date/time and exposure length
+	charsWritten = snprintf(buf, bufSize, 
+			"%s-%02d.%02d.%04d_%02d:%02d:%02d.log",
+			subsystem,
+			currentTime.tm_mon + 1,
+			currentTime.tm_mday,
+			currentTime.tm_year + 1900,
+			currentTime.tm_hour,
+			currentTime.tm_min,
+			currentTime.tm_sec,
+			exposure);
+
+	// Return length of the new string
+	return charsWritten;
+
+} // Function es_generateLogFilename
+
+
