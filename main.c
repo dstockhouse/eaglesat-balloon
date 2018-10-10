@@ -132,6 +132,10 @@ int main() {
 
 	while(!abortTest) {
 
+#ifdef	ES_DEBUG_MODE
+		printf("Starting loop %d\n", cycleCount);
+#endif
+
 		/***** Services to execute each 1-second cycle *****/
 
 		// 		// Read from CRP sensor
