@@ -86,12 +86,14 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 	printf("Starting read cycle\n");
 
 	// Read all temperature sensors connected on first channels
-	for(i = 0; i < TELEMETRY_NUM_TEMP_SENSORS; i++) {
+	// for(i = 0; i < TELEMETRY_NUM_TEMP_SENSORS; i++) {
+	for(i = 0; i < 2; i++) {
 
 		//resistance
 		temp[i] = analogRead(ADC_CHAN | i);
 
-		resist[i] = (((float)temp[i]) * 10/ADC_MAX)/(1-((float)temp[i])/ADC_MAX);
+		resist[i] = (((float)temp[i]) * 10000/ADC_MAX)/(1-((float)temp[i])/ADC_MAX);
+		printf("resistance %f\n", resist[i]);
 
 		//calibration using steinhardt equation
 		tempActual[i] = 1/((double) stein[i][0] + (double) stein[i][1]*log((double) resist[i]) + 
@@ -99,7 +101,7 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 
 #ifdef ES_DEBUG_MODE
 		printf("\tTemp %d: %f\n", i, tempActual[i]);
-		printf("\tTemp %d: %d\n", i, temp[i]);
+		printf("\tADC val %d: %d\n", i, temp[i]);
 #endif
 		//moving actual temperature values to the structure
 		telemetry->temperature[i] = tempActual[i] - 273.15;
@@ -109,6 +111,6 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 
 	return 0;
 
-} // Function telemetry_pressureRead
+} // Function telemetry_allRead
 
 

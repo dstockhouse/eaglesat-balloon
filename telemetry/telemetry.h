@@ -57,10 +57,6 @@ typedef struct {
 
 int telemetry_allRead(TELEMETRY_DATA *);
 
-int telemetry_pressureRead(float *);
-
-int telemetry_tempRead(float *, int);
-
 int telemetry_init();
 
 #endif // EAGLESAT_TELEMETRY_H
