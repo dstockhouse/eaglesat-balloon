@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 
 /**** Function es_generateCommsPacket ****
@@ -172,26 +173,40 @@ int es_uartGetChar(UART_DEVICE *device)
 /**** Function es_logString ****
  * Logs a string into a device
  */
-int es_uartGetChar(UART_DEVICE *device)
+int es_logString(UART_DEVICE *device, char *string)
 {
+	int log_fd;
 
 	if(device == NULL) {
-		printf("NULL device for uartGetChar\n");
+		printf("NULL device for logString\n");
 		return -1;
 	}
 
-	if(device->inputBufferSize >= INPUT_BUFFER_LENGTH) {
-		printf("Input buffer is full\n");
-		return device->inputBufferSize;
+	// Open log file to append to, creating if necessary
+	log_fd = open(device->logFilename, O_APPEND | O_CREAT, 0666);
+	if(log_fd < 0) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to open log file %s\n", device->logFilename);
+		return log_fd;
+#endif
 	}
 
-	if(!serialCharsAvail(device->uart_fd)) {
-		printf("No input chars available\n");
-		return -3;
+	// Write string to file
+	rc = write(log_fd, string, strlen(str));
+	if(rc < 0) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to write to log file %s\n", device->logFilename);
+		return rc;
+#endif
 	}
 
-	device->inputBuffer[inputBufferSize] = serialRead(device->uart_fd);
-	device->inputBufferSize++;
+	rc = close(log_fd);
+	if(rc) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed\n");
+		return rc;
+#endif
+	}
 
 	return 0;
 }

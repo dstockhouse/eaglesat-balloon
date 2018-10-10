@@ -42,5 +42,7 @@ int mde_init(void);
 
 int mde_requestHealthPacket(int);
 
+int mde_parseData(UART_DEVICE *);
+
 #endif // EAGLESAT_MDE_H
 

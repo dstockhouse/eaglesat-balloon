@@ -118,6 +118,12 @@ int main() {
 #endif
 	}
 
+	/***** Initialize log filenames *****/
+
+	es_generateFilename(crpDevice->logFilename, LOG_FILENAME_LENGTH, "CRP");
+	es_generateFilename(commsDevice->logFilename, LOG_FILENAME_LENGTH, "COMMS");
+	es_generateFilename(mdeDevice->logFilename, LOG_FILENAME_LENGTH, "MDE");
+
 	// Initialize SPI to ADC for telemetry sensors
 	rc = telemetry_spiInit();
 	if (rc) {

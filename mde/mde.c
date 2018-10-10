@@ -121,6 +121,29 @@ int mde_parseData(UART_DEVICE *device) {
 				lastPacket = i;
 				i += 6;
 
+			} else {
+				char dataString[64];
+				int chipIndex, errorVal, rc;
+				struct timeval currentTime;
+
+				// Data packet
+
+				rc = clock_gettime(CLOCK_REALTIME, &currentTime);
+				if(rc) {
+#ifdef	ES_DEBUG_MODE
+					printf("Failed to get time\n");
+					return rc;
+#endif
+				}
+
+				chipIndex = (data >> 20) & 0x07;
+
+				snprintf(dataString, 64, "%d.%09d: Chip %d: Error packet 0x%06x\n");
+
+				// Log to log file
+				es_logString(device, dataString);
+			}
+
 		} else {
 			// Not start of a packet, move on to next potential frame
 			i++;
@@ -148,6 +171,6 @@ int mde_parseData(UART_DEVICE *device) {
 
 	return 0;
 
-} // Function mde_receivePacket
+} // Function mde_parseData
 
 
