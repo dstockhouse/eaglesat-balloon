@@ -4,3 +4,4 @@
 *.o
 *_test
 /examples/*/ex_*
+a.out
