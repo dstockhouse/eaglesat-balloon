@@ -26,6 +26,10 @@
 
 #include <wiringSerial.h>
 
+int comms_parseData(UART_DEVICE *comms) {
+
+	return 0;
+}
 
 /**** Function comms_init ****
  * Initializes UART for the comms module
