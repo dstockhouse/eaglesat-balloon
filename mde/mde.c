@@ -77,9 +77,8 @@ int mde_requestHealthPacket(int fd) {
  */
 int mde_parseData(UART_DEVICE *device) {
 
-	int i, j, lastPacket;
-	char packet[MDE_PACKET_LENGTH];
-	int metadata;
+	int i, j, lastPacket, bytesLeft;
+	int data;
 
 	if(device == NULL) {
 		printf("Invalid buffer for mde packet\n");
@@ -87,7 +86,7 @@ int mde_parseData(UART_DEVICE *device) {
 	}
 
 	i = 0;
-	while(i < device->inputBufferSize) {
+	while(i < device->inputBufferSize - 6) {
 
 		// Determine if current position is start of a packet
 		if(device->inputBuffer[i] == MDE_PACKET_HEADER_BYTE &&
@@ -95,31 +94,32 @@ int mde_parseData(UART_DEVICE *device) {
 				device->inputBuffer[i + 2] == MDE_PACKET_HEADER_BYTE) {
 
 			// Copy packet so its easier to work with
-			for(j = 0; j < MDE_PACKET_LENGTH; j++) {
-				packet[i + j] = device->inputBuffer[i + j];
-			}
 
-			metadata = packet[3] << 16 & packet[4] << 8 & packet[5];
+			data = device->inputBuffer[i + 3] << 16 & device->inputBuffer[i + 4] << 8 & device->inputBuffer[i + 5] ;
 
-			device->metadata->mde_chipsInactive;
-			// Parse data from packet
-			// Count responsive chips
-			for(j = 0; j < 5; j++) {
-				device->metadata->mde_chipsInactive += (metadata >> (14 + j)) & 1;
-			}
+			// Determine if health or data packet
+			if(data & (1 << MDE_PACKET_TYPE_BIT)) {
+				// Health packet
 
-			// Get start point index
-			device->metadata->mde_cycleStart += (metadata >> 11) & 0x0f;
+				device->metadata->mde_chipsInactive;
+				// Parse data from packet
+				// Count responsive chips
+				for(j = 0; j < 5; j++) {
+					device->metadata->mde_chipsInactive += (data >> (14 + j)) & 1;
+				}
 
-			// Get offset point index
-			device->metadata->mde_cycleOffset += (metadata >> 8) & 0x07;
+				// Get start point index
+				device->metadata->mde_cycleStart += (data >> 11) & 0x0f;
 
-			// Get cycle count
-			device->metadata->mde_cycleCount += metadata & 0xff;
+				// Get offset point index
+				device->metadata->mde_cycleOffset += (data >> 8) & 0x07;
 
-			// Adjust pointer into input buffer
-			lastPacket = i;
-			i += 6;
+				// Get cycle count
+				device->metadata->mde_cycleCount += data & 0xff;
+
+				// Adjust pointer into input buffer
+				lastPacket = i;
+				i += 6;
 
 		} else {
 			// Not start of a packet, move on to next potential frame
@@ -128,12 +128,23 @@ int mde_parseData(UART_DEVICE *device) {
 
 	}
 
+	// Number of bytes in transfer remaining after read
+	bytesLeft = device->inputBufferSize - lastPacket;
+
+	if(bytesLeft >= 6) {
+#ifdef	ES_DEBUG_MODE
+		printf("%d unpacketized bytes received by MDE\n", bytesLeft);
+#endif
+		bytesLeft %= 6;
+	}
+
 	// Every whole packet has been read, clear them from buffer
 	for(i = 0; i < device->inputBufferSize; i++) {
 		device->inputBuffer[i] = device->inputBuffer[lastPacket + i];
 	}
 
-	device->inputBufferSize = device->inputBufferSize - lastPacket;
+	// Update buffer size
+	device->inputBufferSize = bytesLeft;
 
 	return 0;
 
