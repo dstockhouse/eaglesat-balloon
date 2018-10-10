@@ -56,9 +56,9 @@ typedef struct {
 // Structure for every object that is a UART device
 typedef struct {
 	int uart_fd;
-	char inputBuffer[ES_BUFFER_LENGTH];
+	char inputBuffer[INPUT_BUFFER_LENGTH];
 	int inputBufferSize;
-	char outputBuffer[ES_BUFFER_LENGTH];
+	char outputBuffer[INPUT_BUFFER_LENGTH];
 	int outputBufferSize;
 	int active; // Only used for CRP
 	METADATA metadata;
