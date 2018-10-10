@@ -83,8 +83,6 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 		{.0024,1.5948e-4,1.0168e-6}};
 
 
-	printf("Starting read cycle\n");
-
 	// Read all temperature sensors connected on first channels
 	// for(i = 0; i < TELEMETRY_NUM_TEMP_SENSORS; i++) {
 	for(i = 0; i < 2; i++) {

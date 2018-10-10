@@ -39,7 +39,7 @@
 
 #define MDE_COMMAND_HEALTH	0x53
 
-int mde_init(void);
+int mde_init(UART_DEVICE *);
 
 int mde_requestHealthPacket(int);
 
