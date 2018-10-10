@@ -28,7 +28,7 @@ int telemetry_init(){
 	mcp3004Setup(ADC_CHAN, SPI_CHAN);
 
 #ifdef ES_DEBUG_MODE
-	printf("Starting ADC test:\n\n");
+	printf("Initialized SPI for telemetry\n");
 #endif
 	return 0;
 }
@@ -93,7 +93,7 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 		temp[i] = analogRead(ADC_CHAN | i);
 
 		resist[i] = (((float)temp[i]) * 10000/ADC_MAX)/(1-((float)temp[i])/ADC_MAX);
-		printf("resistance %f\n", resist[i]);
+		// printf("resistance %f\n", resist[i]);
 
 		//calibration using steinhardt equation
 		tempActual[i] = 1/((double) stein[i][0] +
@@ -102,7 +102,7 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 
 #ifdef ES_DEBUG_MODE
 		printf("\tTemp %d: %f\n", i, tempActual[i]);
-		printf("\tADC val %d: %d\n", i, temp[i]);
+		// printf("\tADC val %d: %d\n", i, temp[i]);
 #endif
 		//moving actual temperature values to the structure
 		telemetry->temperature[i] = tempActual[i] - 273.15;

@@ -82,7 +82,7 @@ int main() {
 
 #ifndef	ES_DEBUG_NO_COMMS
 	// Initialize UART to COMMS transceiver
-	commsDevice.uart_fd = comms_init();
+	comms_init(&commsDevice);
 	if (commsDevice.uart_fd < 0) {
 		// Initialization failed
 #ifdef	ES_DEBUG_MODE

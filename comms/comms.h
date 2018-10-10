@@ -35,6 +35,8 @@
 #define COMMS_COMMAND_HEARTBEAT	".\r"
 #define COMMS_COMMAND_HEARTBEAT_LEN	2
 
+int comms_parseData(UART_DEVICE *);
+
 int comms_init(UART_DEVICE *);
 
 int comms_sendPacket(int fd, char *buffer, int bufSize);
