@@ -24,6 +24,8 @@
 #ifndef EAGLESAT_MDE_H
 #define EAGLESAT_MDE_H
 
+#include "../es_control.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -35,7 +37,7 @@
 
 int mde_init(void);
 
-int mde_requestHealthPacket(char *buffer, int bufSize);
+int mde_requestHealthPacket(int);
 
 #endif // EAGLESAT_MDE_H
 

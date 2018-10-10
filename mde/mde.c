@@ -47,18 +47,45 @@ int mde_init(void) {
 /**** Function mde_requestHealthPacket ****
  * Requests a health packet from MDE over UART channel
  */
-int mde_requestHealthPacket(int fd, char *buffer, int bufSize) {
+int mde_requestHealthPacket(int fd) {
 
 	int i;
-	char tempInput;
+	char inputBuffer[MDE_PACKET_LENGTH];
 
-	if(buffer == NULL || bufSize < 6) {
+	if(metadata == NULL) {
 		printf("Invalid buffer for health packet\n");
 		return -1;
 	}
 
 	// Send byte to request health packet
 	serialPutchar(MDE_COMMAND_HEALTH);
+
+	// Read 6 bytes into UART
+	// for(i = 0; i < MDE_PACKET_LENGTH; i++) {
+	// 	// Blocks for 10 seconds - bad
+	// 	// Try a direct read for better results
+	// 	buffer[i] = serialGetChar(fd);
+	// }
+
+	return 0;
+
+} // Function mde_requestPacket
+
+
+/**** Function mde_receivePacket ****
+ * Requests a health packet from MDE over UART channel
+ */
+int mde_receivePacket(int fd, MDE_METADATA *metadata) {
+
+	int i;
+	char inputBuffer[MDE_PACKET_LENGTH];
+
+	if(metadata == NULL) {
+		printf("Invalid buffer for health packet\n");
+		return -1;
+	}
+
+	if(serialDataAvail(fd) < 6) {
 
 	// Read 6 bytes into UART
 	for(i = 0; i < MDE_PACKET_LENGTH; i++) {
@@ -69,5 +96,6 @@ int mde_requestHealthPacket(int fd, char *buffer, int bufSize) {
 
 	return 0;
 
-} // Function mde_requestPacket
+} // Function mde_receivePacket
+
 

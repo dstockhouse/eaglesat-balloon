@@ -22,6 +22,8 @@
 #ifndef EAGLESAT_COMMS_H
 #define EAGLESAT_COMMS_H
 
+#include "../es_control.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
