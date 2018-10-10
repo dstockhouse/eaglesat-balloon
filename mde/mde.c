@@ -72,27 +72,68 @@ int mde_requestHealthPacket(int fd) {
 } // Function mde_requestPacket
 
 
-/**** Function mde_receivePacket ****
- * Requests a health packet from MDE over UART channel
+/**** Function mde_parseData ****
+ * Parses a received packet 
  */
-int mde_receivePacket(int fd, MDE_METADATA *metadata) {
+int mde_parseData(UART_DEVICE *device) {
 
-	int i;
-	char inputBuffer[MDE_PACKET_LENGTH];
+	int i, j, lastPacket;
+	char packet[MDE_PACKET_LENGTH];
+	int metadata;
 
-	if(metadata == NULL) {
-		printf("Invalid buffer for health packet\n");
+	if(device == NULL) {
+		printf("Invalid buffer for mde packet\n");
 		return -1;
 	}
 
-	if(serialDataAvail(fd) < 6) {
+	i = 0;
+	while(i < device->inputBufferSize) {
 
-	// Read 6 bytes into UART
-	for(i = 0; i < MDE_PACKET_LENGTH; i++) {
-		// Blocks for 10 seconds - bad
-		// Try a direct read for better results
-		buffer[i] = serialGetChar(fd);
+		// Determine if current position is start of a packet
+		if(device->inputBuffer[i] == MDE_PACKET_HEADER_BYTE &&
+				device->inputBuffer[i + 1] == MDE_PACKET_HEADER_BYTE &&
+				device->inputBuffer[i + 2] == MDE_PACKET_HEADER_BYTE) {
+
+			// Copy packet so its easier to work with
+			for(j = 0; j < MDE_PACKET_LENGTH; j++) {
+				packet[i + j] = device->inputBuffer[i + j];
+			}
+
+			metadata = packet[3] << 16 & packet[4] << 8 & packet[5];
+
+			device->metadata->mde_chipsInactive;
+			// Parse data from packet
+			// Count responsive chips
+			for(j = 0; j < 5; j++) {
+				device->metadata->mde_chipsInactive += (metadata >> (14 + j)) & 1;
+			}
+
+			// Get start point index
+			device->metadata->mde_cycleStart += (metadata >> 11) & 0x0f;
+
+			// Get offset point index
+			device->metadata->mde_cycleOffset += (metadata >> 8) & 0x07;
+
+			// Get cycle count
+			device->metadata->mde_cycleCount += metadata & 0xff;
+
+			// Adjust pointer into input buffer
+			lastPacket = i;
+			i += 6;
+
+		} else {
+			// Not start of a packet, move on to next potential frame
+			i++;
+		}
+
 	}
+
+	// Every whole packet has been read, clear them from buffer
+	for(i = 0; i < device->inputBufferSize; i++) {
+		device->inputBuffer[i] = device->inputBuffer[lastPacket + i];
+	}
+
+	device->inputBufferSize = device->inputBufferSize - lastPacket;
 
 	return 0;
 

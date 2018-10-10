@@ -33,6 +33,7 @@
 #define MDE_SERIAL_BAUDRATE	9600
 
 #define MDE_PACKET_LENGTH	6
+#define MDE_PACKET_HEADER_BYTE	0x80
 #define MDE_COMMAND_HEALTH	0x53
 
 int mde_init(void);

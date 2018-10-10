@@ -52,10 +52,10 @@ int main() {
 	// Objects for each UART device
 	UART_DEVICE crpDevice, commsDevice, mdeDevice;
 
-//	// Size of each generated packet to be sent to comms
-//	int packetSize;
-//	char commsPacket[MAX_COMMS_PACKET_SIZE];
-//
+	//	// Size of each generated packet to be sent to comms
+	//	int packetSize;
+	//	char commsPacket[MAX_COMMS_PACKET_SIZE];
+	//
 	// // Serial port file descriptors for each UART device
 	// int comms_fd, mde_fd, crp_fd;
 
@@ -133,19 +133,6 @@ int main() {
 
 	while(!abortTest) {
 
-		/***** Services to execute every 15 minutes *****/
-		if (cycleCounter % (15 * 60) == 0 && cycleCount > 0) {
-
-			// Get MDE health data
-			mde_requestHealthPacket(mdeDevice->uart_fd);
-
-		}
-
-		/***** Services to execute every 30 seconds *****/
-		if (cycleCounter % 30 == 0 && cycleCount > 0) {
-
-		}
-
 		/***** Services to execute each 1-second cycle *****/
 
 		// Read from CRP sensor
@@ -170,47 +157,33 @@ int main() {
 
 
 		// Read telemetry data
-		telemetry_allRead(&telemetry);
-
-// 		// Read telemetry sensors
-// 		rc = telemetry_tempRead(&pressure);
-// 		if (rc) {
-// #ifdef	ES_DEBUG_MODE
-// 			printf("Didn't successfully read temp sensors.\n");
-// 			return rc;
-// #endif
-// 		}
-// 
-// 		rc = telemetry_tempRead(temperature, TELEMETRY_NUM_TEMP_SENSORS);
-// 		if (rc) {
-// #ifdef	ES_DEBUG_MODE
-// 			printf("Didn't successfully read temp sensors.\n");
-// 			return rc;
-// #endif
-// 		}
-
-		// Get current time
-		clock_gettime(CLOCK_REALTIME, &missionCurrentTime);
-
-		// Get elasped time since start of mission
-		es_timeDifference(&missionCurrentTime, &missionStartTime, &missionElapsedTime);
-
-		// Generate packet to send to comms
-		packetSize = es_generateCommsPacket(char *commsPacket, MAX_PACKET_SIZE,
-				temperature, pressure, NULL, NULL);
-		if (packetSize > 0) {
-			// Send data or heartbeat to comms
-			rc = comms_sendPacket(commsPacket, packetSize);
-			if (rc) {
+		rc = telemetry_allRead(&telemetry);
+		if(rc) {
 #ifdef	ES_DEBUG_MODE
-				printf("Couldn't send COMMS packet.\n");
-				return rc;
+			printf("Failed\n");
+			return rc;
 #endif
-			}
 		}
 
+		// 		// Read telemetry sensors
+		// 		rc = telemetry_tempRead(&pressure);
+		// 		if (rc) {
+		// #ifdef	ES_DEBUG_MODE
+		// 			printf("Didn't successfully read temp sensors.\n");
+		// 			return rc;
+		// #endif
+		// 		}
+		// 
+		// 		rc = telemetry_tempRead(temperature, TELEMETRY_NUM_TEMP_SENSORS);
+		// 		if (rc) {
+		// #ifdef	ES_DEBUG_MODE
+		// 			printf("Didn't successfully read temp sensors.\n");
+		// 			return rc;
+		// #endif
+		// 		}
 
-		// Delay or poll UART channels
+
+		/***** Delay or poll UART channels *****/
 
 		// Check for crp input
 		while(serialDataAvail(crpDevice->uart_fd)) {
@@ -251,10 +224,62 @@ int main() {
 
 		/***** Parse all input data *****/
 
-		if(crpDevice->inputBufferSize > 0) {
-			// Interpret data from CRP
-
+		rc = crp_parseData(&crpDevice);
+		if(rc) {
+#ifdef	ES_DEBUG_MODE
+			printf("Failed\n");
+			return rc;
+#endif
 		}
+
+		rc = comms_parseData(&commsDevice);
+		if(rc) {
+#ifdef	ES_DEBUG_MODE
+			printf("Failed\n");
+			return rc;
+#endif
+		}
+
+		rc = mde_parseData(&mdeDevice);
+		if(rc) {
+#ifdef	ES_DEBUG_MODE
+			printf("Failed\n");
+			return rc;
+#endif
+		}
+
+		/***** Services to execute every 30 seconds *****/
+		if (cycleCounter % 30 == 0 && cycleCount > 0) {
+
+			// Get current time
+			clock_gettime(CLOCK_REALTIME, &missionCurrentTime);
+
+			// Get elasped time since start of mission
+			es_timeDifference(&missionCurrentTime, &missionStartTime, &missionElapsedTime);
+
+			// Generate packet to send to comms
+			packetSize = es_generateCommsPacket(char *commsPacket, MAX_PACKET_SIZE,
+					temperature, pressure, NULL, NULL);
+			if (packetSize > 0) {
+				// Send data or heartbeat to comms
+				rc = comms_sendPacket(commsPacket, packetSize);
+				if (rc) {
+#ifdef	ES_DEBUG_MODE
+					printf("Couldn't send COMMS packet.\n");
+					return rc;
+#endif
+				}
+			}
+
+		} // 30 second cycle counter
+
+		/***** Services to execute every 15 minutes *****/
+		if (cycleCounter % (15 * 60) == 0 && cycleCount > 0) {
+
+			// Get MDE health data
+			mde_requestHealthPacket(mdeDevice->uart_fd);
+
+		} // 15 minute cycle counter
 
 		// Increment cycle counter for task scheduling
 		cycleCount++;
