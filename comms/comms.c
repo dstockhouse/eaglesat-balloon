@@ -28,7 +28,7 @@
 /**** Function comms_init ****
  * Initializes UART for the comms module
  */
-int comms_init() {
+int comms_init(&UART_DEVICE comms) {
 
 	int uart_fd;
 
@@ -38,8 +38,11 @@ int comms_init() {
 		printf("Failed to open serial device %s\n", COMMS_SERIAL_DEVICE);
 		return -1;
 	}
+	comms->uart_fd = uart_fd;
 
-	// Read from UART for sensor initialization console
+	// Read from UART for sensor initialization console (maybe later)
+	// Delay to allow radio to boot up
+	es_nsWait(10000000);
 
 	// Give UART the start string
 	comms_sendPacket(uart_fd, COMMS_COMMAND_START, 2);

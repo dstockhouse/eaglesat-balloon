@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 
 /**** Function es_generateCommsPacket ****
@@ -29,8 +30,8 @@
 int es_generateCommsPacket(char *packet, int bufferLength,
 		struct timespec *missionTime,
 		TELEMETRY_DATA *telemetry,
-		CRP_METADATA *crpData,
-		MDE_METADATA *mdeData) {
+		METADATA *crpData,
+		METADATA *mdeData) {
 
 	// Length of the packet to be generated
 	int packetLength = 0;
@@ -69,10 +70,40 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 	packetLength--;
 
 	// Put metadata from CRP and MDE into packet
-	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-			"MDE:%d,CRP:%d,", metadata->temp);
+	if(crpData != NULL) {
+		char crpString[16];
 
-	// Put CR as last character instead of '\0'
+		snprintf(crpString, 16, "ic:%d", crpData->crp_imageCount);
+
+		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+				"CRP:%s,", crpString);
+	} else {
+		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+				"nCRP,");
+	}
+
+	packetLength--;
+	
+	if(mdeData != NULL) {
+		char mdeString[16];
+
+		snprintf(mdeString, 16, "in%d:st%d:os%d:cc%d",
+				mdeData->chipsInactive,
+				mdeData->cycleStart,
+				mdeData->cycleOffset,
+				mdeData->cycleCount);
+
+		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+				"MDE:%s,", mdeString);
+
+	} else {
+		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+				"nMDE,");
+	}
+
+	packetLength--;
+
+	// Put CR as last character instead of comma
 	packet[packetLength - 1] = '\r';
 
 	return packetLength;
@@ -167,5 +198,81 @@ int es_uartGetChar(UART_DEVICE *device)
 
 	return 0;
 }
+
+
+/**** Function es_logString ****
+ * Logs a string into a device
+ */
+int es_logString(UART_DEVICE *device, char *string)
+{
+	int log_fd;
+
+	if(device == NULL) {
+		printf("NULL device for logString\n");
+		return -1;
+	}
+
+	// Open log file to append to, creating if necessary
+	log_fd = open(device->logFilename, O_APPEND | O_CREAT, 0666);
+	if(log_fd < 0) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to open log file %s\n", device->logFilename);
+		return log_fd;
+#endif
+	}
+
+	// Write string to file
+	rc = write(log_fd, string, strlen(str));
+	if(rc < 0) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to write to log file %s\n", device->logFilename);
+		return rc;
+#endif
+	}
+
+	rc = close(log_fd);
+	if(rc) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed\n");
+		return rc;
+#endif
+	}
+
+	return 0;
+}
+
+
+/**** Function es_generateLogFilename ****
+ * Generate a filename that matches the format 
+ * "str-mm.dd.yyyy-hh:mm:ss.log"
+ */
+int es_generateLogFilename(char *buf, int bufSize, char *subsystem) {
+
+	int charsWritten;
+
+	// Time variables
+	time_t t;
+	struct tm currentTime;
+
+	// Get current time in UTC
+	t = time(NULL);
+	currentTime = *localtime(&t);
+
+	// Create filename using date/time and exposure length
+	charsWritten = snprintf(buf, bufSize, 
+			"%s-%02d.%02d.%04d_%02d:%02d:%02d.log",
+			subsystem,
+			currentTime.tm_mon + 1,
+			currentTime.tm_mday,
+			currentTime.tm_year + 1900,
+			currentTime.tm_hour,
+			currentTime.tm_min,
+			currentTime.tm_sec,
+			exposure);
+
+	// Return length of the new string
+	return charsWritten;
+
+} // Function es_generateLogFilename
 
 

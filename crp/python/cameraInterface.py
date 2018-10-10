@@ -36,10 +36,20 @@
 
 #Import Packages
 import serial
+import time
+import os
 
 #Define Serial Connection, Automaticly Set to 9600 Baud, 8 Bits, No Parity,
 #and One Stopbit
 serialC = serial.Serial('/dev/ttyS0')
+
+#Activate Read Script
+os.system('python serialRead.py')
+
+#Reset Camera
+serialC.write(b'\xAA\x08\x00\x00\x00\xFF')
+time.sleep(1)
+print("Camera Reset")
 
 #Define Functions
 def serialInit():
@@ -49,12 +59,13 @@ def serialInit():
 
     #Sync Device
     serialCmd('cmd_sync')
+
+    #Warm Camera
+    time.sleep(2)
+    print("Camera Warmed")
     
     #Initalise Device
     serialCmd('cmd_init')
-
-    #Start Dataloop
-    
     pass
 
 
@@ -68,11 +79,29 @@ def serialCmd(command):
         serialC.write(command)
         
     elif command == "cmd_init":
+        #Initalize
         serialC.write(b'\xAA\x01\x00\x08\x09\x07')
+        time.sleep(1)
         
+        #Stop Sleep
+        serialC.write(b'\xAA\x15\x00\x00\x00\x00')
+        time.sleep(1)
+        
+        print("Initalized")
+
     elif command == "get_pic":
-        serialC.write(b'\xAA\x04\x02\x00\x00\x00')
-        
+            #Take Picture
+            serialC.write(b'\xAA\x04\x02\x00\x00\x00')
+            print("Taking Image")
+                
+            #Wait for Data
+            time.sleep(140)
+
+            #Thanks Camera
+            serialC.write(b'\xAA\x0E\x0D\x00\x00\x00')
+            print("Data Recived")
+            time.sleep(1)
+            
     elif command == "get_snap":
         print("Not yet Implemented")
         
@@ -109,6 +138,21 @@ def serialCmd(command):
         print("Invalid Command")
     pass
 
+def takePic(num,delay):
+        i = 0
+        while i < num:
+                #Take Picture
+                serialC.write(b'\xAA\x04\x02\x00\x00\x00')
+                print("Taking Image " + str(i + 1) + " Out of " + str(num))
+                
+                #Wait for Data
+                time.sleep(120)
+
+                #Thanks Camera
+                serialC.write(b'\xAA\x0E\x0D\x00\x00\x00')
+                i = i + 1
+                print("Data Recived for Image: " + str(i) + " Out of " + str(num))
+                time.sleep(delay)
 
 def serialClose():
     #End Dataloop
@@ -118,15 +162,7 @@ def serialClose():
     serialC.close()
     pass
 
-
-def serialListen(serial_port):
-    while loop_datacheck == True:
-        read = serialC.read(4)
-        if read == "AA0A":
-            loop_dl = True
-        else:
-            loop_dl = False
-        while loop_dl == True:
-            data =  data + serialC.read()
-    pass
-
+#Run Camera
+serialInit()
+takePic(3,1)
+serialClose()

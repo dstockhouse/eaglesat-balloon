@@ -40,15 +40,31 @@
 
 #define INPUT_BUFFER_LENGTH	16384
 
+#define LOG_FILENAME_LENGTH	64
+
+
+// Metadata for each UART device
+typedef struct {
+	// CRP
+	int crp_imageCount;
+	// MDE
+	int mde_chipsInactive;
+	int mde_cycleStart;
+	int mde_cycleOffset;
+	int mde_cycleCount;
+	// COMMS
+} METADATA;
 
 // Structure for every object that is a UART device
 typedef struct {
 	int uart_fd;
-	char inputBuffer[ES_BUFFER_LENGTH];
+	char inputBuffer[INPUT_BUFFER_LENGTH];
+	char logFilename[LOG_FILENAME_LENGTH];
 	int inputBufferSize;
-	char outputBuffer[ES_BUFFER_LENGTH];
+	char outputBuffer[INPUT_BUFFER_LENGTH];
 	int outputBufferSize;
 	int active; // Only used for CRP
+	METADATA metadata;
 } UART_DEVICE;
 
 
