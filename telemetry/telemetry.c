@@ -47,7 +47,7 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 	float resist[TELEMETRY_NUM_TEMP_SENSORS];
 
 	// Read pressure on the next channel (i is one higher than temperature sensors)
-	pressureValue = analogRead(ADC_CHAN | 7);
+	pressureValue = analogRead(ADC_CHAN | TELEMETRY_PRESSURE_SENSOR_CHAN);
 
 	// According to the pressure sensor datasheet, the pressure
 	// analog output ranges from 10% to 90% the analog range, so the
@@ -76,11 +76,11 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 	// steinhardt calibration values
 	float stein[TELEMETRY_NUM_TEMP_SENSORS][3] = {{.0026,1.8757e-4,7.7293e-7},
 		{.0024,2.6750e-4,-6.4439e-8},
-		{.0026,1.7505e-4,8.8288e-7},
-		{.0025,2.1041e-4,5.7530e-7},
+		{.0024,1.7505e-4,8.8288e-7},
+		{.0024,2.1041e-4,5.7530e-7},
 		{.0024,2.7323e-4,-1.7083e-7},
-		{.0026,1.7572e-4,8.7425e-7},
-		{.0027,1.5948e-4,1.0168e-6}};
+		{.0024,1.7572e-4,8.7425e-7},
+		{.0024,1.5948e-4,1.0168e-6}};
 
 
 	printf("Starting read cycle\n");
@@ -96,7 +96,8 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 		printf("resistance %f\n", resist[i]);
 
 		//calibration using steinhardt equation
-		tempActual[i] = 1/((double) stein[i][0] + (double) stein[i][1]*log((double) resist[i]) + 
+		tempActual[i] = 1/((double) stein[i][0] +
+				(double) stein[i][1]*log((double) resist[i]) + 
 				(double) stein[i][2]*pow(log((double) resist[i]),3));
 
 #ifdef ES_DEBUG_MODE

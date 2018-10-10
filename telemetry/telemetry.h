@@ -36,6 +36,8 @@
 #define TELEMETRY_TEMP_SENSOR_MDE	5
 #define TELEMETRY_TEMP_SENSOR_COMMS	6
 
+#define TELEMETRY_PRESSURE_SENSOR_CHAN	7
+
 // Indices for each pressure sensor
 #define ADC_CHAN 100
 #define SPI_CHAN 0
