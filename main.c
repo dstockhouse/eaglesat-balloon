@@ -31,8 +31,11 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <wiringSerial.h>
+
 // For testing program in debug mode
-#define	ES_DEBUG_MODE
+// Defined in es_control.h
+// #define	ES_DEBUG_MODE
 
 
 /**** Function main ****
@@ -52,19 +55,15 @@ int main() {
 	// Objects for each UART device
 	UART_DEVICE crpDevice, commsDevice, mdeDevice;
 
-
-	// Telemetry variables
-	// float temperature[TELEMETRY_NUM_TEMP_SENSORS], pressure;
+	// Telemetry object
 	TELEMETRY_DATA telemetry;
 
 	// Time variables
-	struct timespec missionCurrentTime, missionStartTime, missionElapsedTime;
+	struct timespec missionCurrentTime, missionStartTime, missionElapsedTime, currentLoopDuration, currentLoopTime;
 
 	/***** Check device connections *****/
 
 	// Ensure watchdog timer operating
-
-	// Ensure proper scheduling parameters set
 
 	/***** Get mission start time *****/
 	clock_gettime(CLOCK_REALTIME, &missionStartTime);
@@ -72,43 +71,54 @@ int main() {
 	/***** Initialize all communication interfaces *****/
 
 	// Initialize UART to CRP sensor
-	crpDevice.uart_fd = crp_sensorInit();
-	if (crpDevice.uart_fd) {
-		// Sensor initialization failed
-#ifdef	ES_DEBUG_MODE
-		printf("Couldn't initialize CRP sensor.\n");
-		return crpDevice.uart_fd;
-#endif
-	}
+	// 	crpDevice.uart_fd = crp_sensorInit();
+	// 	if (crpDevice.uart_fd) {
+	// 		// Sensor initialization failed
+	// #ifdef	ES_DEBUG_MODE
+	// 		printf("Couldn't initialize CRP sensor.\n");
+	// 		return crpDevice.uart_fd;
+	// #endif
+	// 	}
 
+#ifndef	ES_DEBUG_NO_COMMS
 	// Initialize UART to COMMS transceiver
 	commsDevice.uart_fd = comms_init();
-	if (commsDevice.uart_fd) {
+	if (commsDevice.uart_fd < 0) {
 		// Initialization failed
 #ifdef	ES_DEBUG_MODE
 		printf("Couldn't initialize COMMS UART.\n");
 		return commsDevice.uart_fd;
-#endif
+#endif 	// ES_DEBUG_MODE
 	}
+#endif	// ES_DEBUG_NO_COMMS
 
+#ifndef	ES_DEBUG_NO_MDE
 	// Initialize UART to MDE board
 	mdeDevice.uart_fd = mde_init();
-	if (mdeDevice.uart_fd) {
+	if (mdeDevice.uart_fd < 0) {
 		// Initialization failed
 #ifdef	ES_DEBUG_MODE
 		printf("Couldn't initialize MDE UART.\n");
 		return mdeDevice.uart_fd;
 #endif
 	}
+#endif	// ES_DEBUG_NO_MDE
 
 	/***** Initialize log filenames *****/
 
-	es_generateFilename(crpDevice.logFilename, LOG_FILENAME_LENGTH, "CRP");
-	es_generateFilename(commsDevice.logFilename, LOG_FILENAME_LENGTH, "COMMS");
-	es_generateFilename(mdeDevice.logFilename, LOG_FILENAME_LENGTH, "MDE");
+	es_generateLogFilename(crpDevice.logFilename, LOG_FILENAME_LENGTH, "CRP");
+	es_generateLogFilename(commsDevice.logFilename, LOG_FILENAME_LENGTH, "COMMS");
+	es_generateLogFilename(mdeDevice.logFilename, LOG_FILENAME_LENGTH, "MDE");
+
+#ifdef ES_DEBUG_MODE
+	printf("Log filenames:\t\t%s\n\t\t\t%s\n\t\t\t%s\n\n", 
+			crpDevice.logFilename,
+			commsDevice.logFilename,
+			mdeDevice.logFilename);
+#endif
 
 	// Initialize SPI to ADC for telemetry sensors
-	rc = telemetry_spiInit();
+	rc = telemetry_init();
 	if (rc) {
 		// Initialization failed
 #ifdef	ES_DEBUG_MODE
@@ -124,25 +134,25 @@ int main() {
 
 		/***** Services to execute each 1-second cycle *****/
 
-// 		// Read from CRP sensor
-// 		rc = crp_sensorRead(imageDataBuf, CRP_IMAGE_BUF_SIZE);
-// 		if (rc < CRP_IMAGE_SIZE) {
-// 
-// 			// Not entire image was read
-// #ifdef	ES_DEBUG_MODE
-// 			printf("Only read %d bytes.\n", rc);
-// #endif
-// 
-// 		}
-// 
-// 		// Store image that was read
-// 		rc = crp_imageStore(imageDataBuf, rc);
-// 		if (rc) {
-// #ifdef	ES_DEBUG_MODE
-// 			printf("Didn't successfully store image data.\n");
-// 			return rc;
-// #endif
-// 		}
+		// 		// Read from CRP sensor
+		// 		rc = crp_sensorRead(imageDataBuf, CRP_IMAGE_BUF_SIZE);
+		// 		if (rc < CRP_IMAGE_SIZE) {
+		// 
+		// 			// Not entire image was read
+		// #ifdef	ES_DEBUG_MODE
+		// 			printf("Only read %d bytes.\n", rc);
+		// #endif
+		// 
+		// 		}
+		// 
+		// 		// Store image that was read
+		// 		rc = crp_imageStore(imageDataBuf, rc);
+		// 		if (rc) {
+		// #ifdef	ES_DEBUG_MODE
+		// 			printf("Didn't successfully store image data.\n");
+		// 			return rc;
+		// #endif
+		// 		}
 
 		// Read CRP sensor using python script
 
@@ -174,73 +184,15 @@ int main() {
 		// 		}
 
 
-		/***** Delay or poll UART channels *****/
-
-		// Check for crp input
-		while(serialDataAvail(crpDevice.uart_fd)) {
-			// Read serial input
-			rc = es_uartGetChar(crpDevice.uart_fd);
-			if(rc) {
-#ifdef	ES_DEBUG_MODE
-				printf("Failed to read from CRP channel\n");
-				return rc;
-#endif
-			}
-		}
-
-		// Check for comms input
-		while(serialDataAvail(commsDevice.uart_fd)) {
-			// Read serial input
-			rc = es_uartGetChar(commsDevice.uart_fd);
-			if(rc) {
-#ifdef	ES_DEBUG_MODE
-				printf("Failed to read from COMMS channel\n");
-				return rc;
-#endif
-			}
-		}
-
-		// Check for MDE input
-		while(serialDataAvail(mdeDevice.uart_fd)) {
-			// Read serial input
-			rc = es_uartGetChar(mdeDevice.uart_fd);
-			if(rc) {
-#ifdef	ES_DEBUG_MODE
-				printf("Failed to read from MDE channel\n");
-				return rc;
-#endif
-			}
-		}
-
-
-		/***** Parse all input data *****/
-
-		rc = crp_parseData(&crpDevice);
-		if(rc) {
-#ifdef	ES_DEBUG_MODE
-			printf("Failed\n");
-			return rc;
-#endif
-		}
-
-		rc = comms_parseData(&commsDevice);
-		if(rc) {
-#ifdef	ES_DEBUG_MODE
-			printf("Failed\n");
-			return rc;
-#endif
-		}
-
-		rc = mde_parseData(&mdeDevice);
-		if(rc) {
-#ifdef	ES_DEBUG_MODE
-			printf("Failed\n");
-			return rc;
-#endif
-		}
-
 		/***** Services to execute every 30 seconds *****/
-		if (cycleCounter % 30 == 0 && cycleCount > 0) {
+		// #ifdef	ES_DEBUG_MODE
+		// 		// If debugging use 3 seconds instead
+		// 		if (cycleCount % 3 == 0 && cycleCount > 0) {
+		// #else
+		if (cycleCount % 30 == 0 && cycleCount > 0) {
+			// #endif	// ES_DEBUG_MODE
+			int packetSize;
+			char commsPacket[MAX_COMMS_PACKET_SIZE];
 
 			// Get current time
 			clock_gettime(CLOCK_REALTIME, &missionCurrentTime);
@@ -249,43 +201,129 @@ int main() {
 			es_timeDifference(&missionCurrentTime, &missionStartTime, &missionElapsedTime);
 
 			// Generate packet to send to comms
-			packetSize = es_generateCommsPacket(char *commsPacket, MAX_PACKET_SIZE,
-					&telemetry, 
+			packetSize = es_generateCommsPacket(commsPacket, MAX_COMMS_PACKET_SIZE,
+					&missionElapsedTime,
+					&telemetry,
 					&(crpDevice.metadata),
 					&(mdeDevice.metadata));
-			if (packetSize > 0) {
-				// Send data or heartbeat to comms
-				rc = comms_sendPacket(commsPacket, packetSize);
-				if (rc) {
+			comms_sendPacket(commsDevice.uart_fd, commsPacket, packetSize);
+			if (rc) {
 #ifdef	ES_DEBUG_MODE
-					printf("Couldn't send COMMS packet.\n");
-					return rc;
+				printf("Couldn't send COMMS packet.\n");
+				return rc;
 #endif
-				}
 			}
 
-		} // 30 second cycle counter
-		else {
+			// 30 second cycle counter
+		} else {
 			// If no data sent, send heartbeat
-			comms_sendPacket(".\r", 2);
+			comms_sendPacket(commsDevice.uart_fd, ".\r", 2);
+		}
 
 		/***** Services to execute every 15 minutes *****/
-		if (cycleCounter % (15 * 60) == 0 && cycleCount > 0) {
+		if (cycleCount % (15 * 60) == 0 && cycleCount > 0) {
 
+#ifdef	ES_DEBUG_NO_MDE
 			// Get MDE health data
 			mde_requestHealthPacket(mdeDevice.uart_fd);
+#endif	// ES_DEBUG_NO_MDE
 
 		} // 15 minute cycle counter
 
 		// Increment cycle counter for task scheduling
 		cycleCount++;
 
+		do {
+
+			/***** Delay or poll UART channels *****/
+
+#ifdef	ES_DEBUG_NO_CRP
+			// Check for crp input
+			while(serialDataAvail(crpDevice.uart_fd)) {
+				// Read serial input
+				rc = es_uartGetChar(&crpDevice);
+				if(rc) {
 #ifdef	ES_DEBUG_MODE
-		// Exit program after 2 minutes
-		if(cycleCount > 120) {
-			abortTest = 1;
-		}
+					printf("Failed to read from CRP channel\n");
+					return rc;
+#endif	// ES_DEBUG_MODE
+				}
+			}
+#endif	// ES_DEBUG_NO_CRP
+
+
+#ifndef	ES_DEBUG_NO_COMMS
+			// Check for comms input
+			while(serialDataAvail(commsDevice.uart_fd)) {
+				// Read serial input
+				rc = es_uartGetChar(&commsDevice);
+				if(rc) {
+#ifdef	ES_DEBUG_MODE
+					printf("Failed to read from COMMS channel\n");
+					return rc;
 #endif
+				}
+			}
+#endif	// ES_DEBUG_NO_COMMS
+
+
+#ifndef	ES_DEBUG_NO_MDE
+			// Check for MDE input
+			while(serialDataAvail(mdeDevice.uart_fd)) {
+				// Read serial input
+				rc = es_uartGetChar(&mdeDevice);
+				if(rc) {
+#ifdef	ES_DEBUG_MODE
+					printf("Failed to read from MDE channel\n");
+					return rc;
+#endif
+				}
+			}
+#endif	// ES_DEBUG_NO_MDE
+
+
+			/***** Parse all input data *****/
+
+#ifndef	ES_DEBUG_NO_CRP
+			// rc = crp_parseData(&crpDevice);
+			if(rc) {
+#ifdef	ES_DEBUG_MODE
+				printf("Failed\n");
+				return rc;
+#endif
+			}
+#endif	// ES_DEBUG_NO_CRP
+
+
+#ifndef	ES_DEBUG_NO_COMMS
+			rc = comms_parseData(&commsDevice);
+			if(rc) {
+#ifdef	ES_DEBUG_MODE
+				printf("Failed\n");
+				return rc;
+#endif
+			}
+#endif	// ES_DEBUG_NO_COMMS
+
+
+#ifndef	ES_DEBUG_NO_MDE
+			rc = mde_parseData(&mdeDevice);
+			if(rc) {
+#ifdef	ES_DEBUG_MODE
+				printf("Failed\n");
+				return rc;
+#endif
+			}
+#endif	// ES_DEBUG_NO_CRP
+
+			currentLoopTime = missionCurrentTime;
+			currentLoopTime.tv_sec += cycleCount;
+
+			clock_gettime(CLOCK_REALTIME, &missionCurrentTime);
+
+			es_timeDifference(&missionCurrentTime, &currentLoopTime, &currentLoopDuration);
+
+		} while(currentLoopDuration.tv_sec < 1);
 
 	} // while(!abortTest)
 

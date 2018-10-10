@@ -21,8 +21,14 @@
 
 #include "mde.h"
 
+#include "../es_control.h"
+#include "../telemetry/telemetry.h"
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+#include <wiringSerial.h>
 
 
 /**** Function mde_init ****
@@ -32,11 +38,15 @@ int mde_init(void) {
 
 	int uart_fd;
 
-	uart_fd = serialOpen(MDE_SERIAL_DEVICE);
+	uart_fd = serialOpen(MDE_SERIAL_DEVICE, MDE_SERIAL_BAUDRATE);
+#ifdef	ES_DEBUG_MODE
+	printf("Got %d as MDE FD\n", uart_fd);
+#endif
 
-	if(uart_fd == -1) {
+	if(uart_fd < 0) {
+#ifdef	ES_DEBUG_MODE
 		printf("Failed to open serial device %s\n", MDE_SERIAL_DEVICE);
-		return -1;
+#endif
 	}
 
 	return uart_fd;
@@ -49,23 +59,11 @@ int mde_init(void) {
  */
 int mde_requestHealthPacket(int fd) {
 
-	int i;
-	char inputBuffer[MDE_PACKET_LENGTH];
-
-	if(metadata == NULL) {
-		printf("Invalid buffer for health packet\n");
-		return -1;
-	}
-
 	// Send byte to request health packet
-	serialPutchar(MDE_COMMAND_HEALTH);
-
-	// Read 6 bytes into UART
-	// for(i = 0; i < MDE_PACKET_LENGTH; i++) {
-	// 	// Blocks for 10 seconds - bad
-	// 	// Try a direct read for better results
-	// 	buffer[i] = serialGetChar(fd);
-	// }
+#ifdef	ES_DEBUG_MODE
+	printf("Sending 0x%02x to MDE\n", MDE_COMMAND_HEALTH);
+#endif	// ES_DEBUG_MODE
+	serialPutchar(fd, MDE_COMMAND_HEALTH);
 
 	return 0;
 
@@ -101,21 +99,21 @@ int mde_parseData(UART_DEVICE *device) {
 			if(data & (1 << MDE_PACKET_TYPE_BIT)) {
 				// Health packet
 
-				device->metadata->mde_chipsInactive;
+				device->metadata.mde_chipsInactive = 0;
 				// Parse data from packet
 				// Count responsive chips
 				for(j = 0; j < 5; j++) {
-					device->metadata->mde_chipsInactive += (data >> (14 + j)) & 1;
+					device->metadata.mde_chipsInactive += (data >> (14 + j)) & 1;
 				}
 
 				// Get start point index
-				device->metadata->mde_cycleStart += (data >> 11) & 0x0f;
+				device->metadata.mde_cycleStart += (data >> 11) & 0x0f;
 
 				// Get offset point index
-				device->metadata->mde_cycleOffset += (data >> 8) & 0x07;
+				device->metadata.mde_cycleOffset += (data >> 8) & 0x07;
 
 				// Get cycle count
-				device->metadata->mde_cycleCount += data & 0xff;
+				device->metadata.mde_cycleCount += data & 0xff;
 
 				// Adjust pointer into input buffer
 				lastPacket = i;
@@ -123,8 +121,8 @@ int mde_parseData(UART_DEVICE *device) {
 
 			} else {
 				char dataString[64];
-				int chipIndex, errorVal, rc;
-				struct timeval currentTime;
+				int chipIndex, rc;
+				struct timespec currentTime;
 
 				// Data packet
 
@@ -138,7 +136,10 @@ int mde_parseData(UART_DEVICE *device) {
 
 				chipIndex = (data >> 20) & 0x07;
 
-				snprintf(dataString, 64, "%d.%09d: Chip %d: Error packet 0x%06x\n");
+				snprintf(dataString, 64, "%d.%09d: Chip %d: Error packet 0x%06x\n",
+						currentTime.tv_sec,
+						currentTime.tv_nsec,
+						chipIndex, data);
 
 				// Log to log file
 				es_logString(device, dataString);

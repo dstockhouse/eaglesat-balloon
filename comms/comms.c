@@ -24,15 +24,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <wiringSerial.h>
+
 
 /**** Function comms_init ****
  * Initializes UART for the comms module
  */
-int comms_init(&UART_DEVICE comms) {
+int comms_init(UART_DEVICE *comms) {
 
 	int uart_fd;
 
-	uart_fd = serialOpen(COMMS_SERIAL_DEVICE);
+	uart_fd = serialOpen(COMMS_SERIAL_DEVICE, COMMS_SERIAL_BAUDRATE);
 
 	if(uart_fd == -1) {
 		printf("Failed to open serial device %s\n", COMMS_SERIAL_DEVICE);
@@ -71,10 +73,21 @@ int comms_sendPacket(int fd, char *buffer, int packetLen) {
 
 	int i;
 
+#ifdef	ES_DEBUG_MODE
+	printf("COMMS output: ");
+#endif
+
 	// Send every byte in the packet
-	for(i = 0; i < bufSize; i++) {
+	for(i = 0; i < packetLen; i++) {
 		serialPutchar(fd, buffer[i]);
+#ifdef	ES_DEBUG_MODE
+		putchar(buffer[i]);
+#endif
 	}
+
+#ifdef	ES_DEBUG_MODE
+	printf("\n");
+#endif
 
 	return i;
 

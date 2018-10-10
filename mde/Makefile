@@ -1,8 +1,8 @@
 CC=gcc
-CFLAGS=-g -Wall
+CFLAGS=-g -Wall -lwiringPi
 LIBS=
-DEPS=mde.h
-SRCS=mde.c main.c
+DEPS=mde.h es_control.h
+SRCS=mde.c main.c ../es_control.c
 OBJS=$(SRCS:.c=.o)
 MAIN=mde_test
 

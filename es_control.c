@@ -21,7 +21,12 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 
+#include <wiringSerial.h>
+
+#include "es_control.h"
 
 /**** Function es_generateCommsPacket ****
  * Generates a packet to be sent to COMMS using data from telemetry sensors and
@@ -88,10 +93,10 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 		char mdeString[16];
 
 		snprintf(mdeString, 16, "in%d:st%d:os%d:cc%d",
-				mdeData->chipsInactive,
-				mdeData->cycleStart,
-				mdeData->cycleOffset,
-				mdeData->cycleCount);
+				mdeData->mde_chipsInactive,
+				mdeData->mde_cycleStart,
+				mdeData->mde_cycleOffset,
+				mdeData->mde_cycleCount);
 
 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
 				"MDE:%s,", mdeString);
@@ -110,14 +115,12 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 }
 
 
-
 /**** Function es_timeDifference ****
  * Gets the difference between two timespec objects.
  * Adapted from code written by Dr. Sam Siewert for CEC450
  */
 int es_timeDifference(struct timespec *stop, struct timespec *start,
-		struct timespec *delta_t)
-{
+		struct timespec *delta_t) {
 	int dt_sec=stop->tv_sec - start->tv_sec;
 	int dt_nsec=stop->tv_nsec - start->tv_nsec;
 
@@ -155,7 +158,7 @@ int es_timeDifference(struct timespec *stop, struct timespec *start,
 /**** Function es_nsWait ****
  * Wrapper for system calls to wait for a number of nanoseconds
  */
-int es_timeDifference(int ns)
+int es_nsWait(int ns)
 {
 	struct timespec delayTime, remainingTime;
 	int rv;
@@ -188,12 +191,12 @@ int es_uartGetChar(UART_DEVICE *device)
 		return device->inputBufferSize;
 	}
 
-	if(!serialCharsAvail(device->uart_fd)) {
+	if(!serialDataAvail(device->uart_fd)) {
 		printf("No input chars available\n");
 		return -3;
 	}
 
-	device->inputBuffer[inputBufferSize] = serialRead(device->uart_fd);
+	device->inputBuffer[device->inputBufferSize] = serialGetchar(device->uart_fd);
 	device->inputBufferSize++;
 
 	return 0;
@@ -206,6 +209,7 @@ int es_uartGetChar(UART_DEVICE *device)
 int es_logString(UART_DEVICE *device, char *string)
 {
 	int log_fd;
+	int rc;
 
 	if(device == NULL) {
 		printf("NULL device for logString\n");
@@ -222,7 +226,7 @@ int es_logString(UART_DEVICE *device, char *string)
 	}
 
 	// Write string to file
-	rc = write(log_fd, string, strlen(str));
+	rc = write(log_fd, string, strlen(string));
 	if(rc < 0) {
 #ifdef	ES_DEBUG_MODE
 		printf("Failed to write to log file %s\n", device->logFilename);
@@ -267,8 +271,7 @@ int es_generateLogFilename(char *buf, int bufSize, char *subsystem) {
 			currentTime.tm_year + 1900,
 			currentTime.tm_hour,
 			currentTime.tm_min,
-			currentTime.tm_sec,
-			exposure);
+			currentTime.tm_sec);
 
 	// Return length of the new string
 	return charsWritten;
