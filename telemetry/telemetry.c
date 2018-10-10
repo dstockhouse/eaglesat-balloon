@@ -71,13 +71,14 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 
   
     // steinhardt calibration values
-    float stein[TELEMETRY_NUM_TEMP_SENSORS][3] = {{.0026,1.8757e-4,7.7293e-7},
-    {.0024,2.6750e-4,-6.4439e-8},
-    {.0026,1.7505e-4,8.8288e-7},
-    {.0025,2.1041e-4,5.7530e-7},
-    {.0024,2.7323e-4,-1.7083e-7},
-    {.0026,1.7572e-4,8.7425e-7},
-    {.0027,1.5948e-4,1.0168e-6}};
+    float stein[TELEMETRY_NUM_TEMP_SENSORS][3] = {
+    {0.00241409184975829,0.000224111843917994,4.97260868024085e-07},
+    {0.0023879237299818,0.00026438625004672,-7.42051520546572e-08},
+    {0.00243606594938504,.000217493053844692,5.38164336988555e-07},
+    {0.00253711187789608,0.0001973097888103,6.2020032809658e-07},
+    {0.00234436652096637,0.000287470479136726,-3.4923616722838e-07},
+    {0.00241409184975829,0.000224111843917994,4.97260868024085e-07}
+    {0.00246753814301977,0.000207579597802424,6.30014785922159e-07}};
     
   
     printf("Starting read cycle\n");
@@ -88,10 +89,10 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
       //resistance
 			temp[i] = analogRead(ADC_CHAN | i);
       #ifdef ES_DEBUG_MODE
-			printf("\tTemp %d: %d\n", i, temp[i]);
+			printf("\tTemp %f: %f\n", i, temp[i]);
       #endif
       
-      resist[i] = (((float)temp[i]) * 10/ADC_MAX)/(1-((float)temp[i])/ADC_MAX);
+      resist[i] = (((float)temp[i])/ADC_MAX*10.0)/(1-((float)temp[i])/ADC_MAX);
       
       //calibration using steinhardt equation
       tempActual[i] = 1/((double) stein[i][0] + (double) stein[i][1]*log((double) resist[i]) + 
