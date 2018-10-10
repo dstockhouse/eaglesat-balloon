@@ -24,21 +24,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <wiringSerial.h>
+
+int comms_parseData(UART_DEVICE *comms) {
+
+	return 0;
+}
 
 /**** Function comms_init ****
  * Initializes UART for the comms module
  */
-int comms_init(&UART_DEVICE comms) {
+int comms_init(UART_DEVICE *device) {
 
 	int uart_fd;
 
-	uart_fd = serialOpen(COMMS_SERIAL_DEVICE);
+	uart_fd = serialOpen(COMMS_SERIAL_DEVICE, COMMS_SERIAL_BAUDRATE);
 
 	if(uart_fd == -1) {
 		printf("Failed to open serial device %s\n", COMMS_SERIAL_DEVICE);
 		return -1;
 	}
-	comms->uart_fd = uart_fd;
+	device->uart_fd = uart_fd;
 
 	// Read from UART for sensor initialization console (maybe later)
 	// Delay to allow radio to boot up
@@ -46,6 +52,9 @@ int comms_init(&UART_DEVICE comms) {
 
 	// Give UART the start string
 	comms_sendPacket(uart_fd, COMMS_COMMAND_START, 2);
+
+	device->inputBufferSize = 0;
+	device->outputBufferSize = 0;
 
 	return uart_fd;
 
@@ -71,10 +80,21 @@ int comms_sendPacket(int fd, char *buffer, int packetLen) {
 
 	int i;
 
+#ifdef	ES_DEBUG_MODE
+	printf("COMMS output: ");
+#endif
+
 	// Send every byte in the packet
-	for(i = 0; i < bufSize; i++) {
+	for(i = 0; i < packetLen; i++) {
 		serialPutchar(fd, buffer[i]);
+#ifdef	ES_DEBUG_MODE
+		putchar(buffer[i]);
+#endif
 	}
+
+#ifdef	ES_DEBUG_MODE
+	printf("\n");
+#endif
 
 	return i;
 

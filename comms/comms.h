@@ -28,13 +28,16 @@
 #include <stdlib.h>
 
 #define COMMS_SERIAL_DEVICE	"/dev/ttySOFT0"
+#define COMMS_SERIAL_BAUDRATE	1200
 
 #define COMMS_COMMAND_START	"K\r"
 #define COMMS_COMMAND_START_LEN	2
 #define COMMS_COMMAND_HEARTBEAT	".\r"
 #define COMMS_COMMAND_HEARTBEAT_LEN	2
 
-int comms_init(void);
+int comms_parseData(UART_DEVICE *);
+
+int comms_init(UART_DEVICE *);
 
 int comms_sendPacket(int fd, char *buffer, int bufSize);
 

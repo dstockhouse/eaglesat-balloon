@@ -21,7 +21,13 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 
+#include <wiringSerial.h>
+
+#include "es_control.h"
 
 /**** Function es_generateCommsPacket ****
  * Generates a packet to be sent to COMMS using data from telemetry sensors and
@@ -47,17 +53,19 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 	// Setup mission time from struct
 	missionHours = missionTime->tv_sec / 3600;
 	missionMinutes = (missionTime->tv_sec % 3600) / 60;
-	missionSeconds = missionTime->tv_sec % 3600;
+	missionSeconds = missionTime->tv_sec % 60;
 
 	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
 			"T:%02d:%02d:%02d,", missionHours, missionMinutes, missionSeconds);
 
 	// Compensate for null character printed
-	packetLength--;
+	if(packet[packetLength - 1] == '\0') {
+		packetLength--;
+	}
 
 	// Put TLM data into packet
 	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-			"Pt:%03.1f:%03.1f:%03.1f,Ot:%03.1f,Ct:%03.1f,Mt:%03.1f,Rt:%03f,Pr:%03.1f,", 
+			"Pt:%03.1f:%03.1f:%03.1f,Ot:%03.1f,Ct:%03.1f,Mt:%03.1f,Rt:%03.1f,Pr:%03.1f,", 
 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS1],
 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS2],
 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS3],
@@ -67,13 +75,15 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_COMMS],
 			telemetry->pressure);
 
-	packetLength--;
+	if(packet[packetLength - 1] == '\0') {
+		packetLength--;
+	}
 
 	// Put metadata from CRP and MDE into packet
 	if(crpData != NULL) {
-		char crpString[16];
+		char crpString[32];
 
-		snprintf(crpString, 16, "ic:%d", crpData->crp_imageCount);
+		snprintf(crpString, 32, "ic:%d", crpData->crp_imageCount);
 
 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
 				"CRP:%s,", crpString);
@@ -82,26 +92,34 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 				"nCRP,");
 	}
 
-	packetLength--;
+	if(packet[packetLength - 1] == '\0') {
+		packetLength--;
+	}
 	
 	if(mdeData != NULL) {
-		char mdeString[16];
+		char mdeString[32];
 
-		snprintf(mdeString, 16, "in%d:st%d:os%d:cc%d",
-				mdeData->chipsInactive,
-				mdeData->cycleStart,
-				mdeData->cycleOffset,
-				mdeData->cycleCount);
+		snprintf(mdeString, 32, "in%d:st%d:os%d:cc%d",
+				mdeData->mde_chipsInactive,
+				mdeData->mde_cycleStart,
+				mdeData->mde_cycleOffset,
+				mdeData->mde_cycleCount);
 
 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
 				"MDE:%s,", mdeString);
+
+#ifdef	ES_DEBUG_MODE
+			// printf("In packet: Address of metadata: %p\n", mdeData);
+#endif	// ES_DEBUG_MODE
 
 	} else {
 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
 				"nMDE,");
 	}
 
-	packetLength--;
+	if(packet[packetLength - 1] == '\0') {
+		packetLength--;
+	}
 
 	// Put CR as last character instead of comma
 	packet[packetLength - 1] = '\r';
@@ -110,14 +128,12 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 }
 
 
-
 /**** Function es_timeDifference ****
  * Gets the difference between two timespec objects.
  * Adapted from code written by Dr. Sam Siewert for CEC450
  */
 int es_timeDifference(struct timespec *stop, struct timespec *start,
-		struct timespec *delta_t)
-{
+		struct timespec *delta_t) {
 	int dt_sec=stop->tv_sec - start->tv_sec;
 	int dt_nsec=stop->tv_nsec - start->tv_nsec;
 
@@ -155,7 +171,7 @@ int es_timeDifference(struct timespec *stop, struct timespec *start,
 /**** Function es_nsWait ****
  * Wrapper for system calls to wait for a number of nanoseconds
  */
-int es_timeDifference(int ns)
+int es_nsWait(int ns)
 {
 	struct timespec delayTime, remainingTime;
 	int rv;
@@ -188,12 +204,16 @@ int es_uartGetChar(UART_DEVICE *device)
 		return device->inputBufferSize;
 	}
 
-	if(!serialCharsAvail(device->uart_fd)) {
+	if(!serialDataAvail(device->uart_fd)) {
 		printf("No input chars available\n");
 		return -3;
 	}
 
-	device->inputBuffer[inputBufferSize] = serialRead(device->uart_fd);
+	device->inputBuffer[device->inputBufferSize] = serialGetchar(device->uart_fd);
+#ifdef	ES_DEBUG_MODE
+	// printf("\t\tInput buffer size is %d\n", device->inputBufferSize);
+	// printf("\t\tReceived char 0x%02x\n", device->inputBuffer[device->inputBufferSize]);
+#endif	// ES_DEBUG_MODE
 	device->inputBufferSize++;
 
 	return 0;
@@ -206,6 +226,7 @@ int es_uartGetChar(UART_DEVICE *device)
 int es_logString(UART_DEVICE *device, char *string)
 {
 	int log_fd;
+	int rc;
 
 	if(device == NULL) {
 		printf("NULL device for logString\n");
@@ -213,7 +234,13 @@ int es_logString(UART_DEVICE *device, char *string)
 	}
 
 	// Open log file to append to, creating if necessary
-	log_fd = open(device->logFilename, O_APPEND | O_CREAT, 0666);
+	// log_fd = open(device->logFilename, O_APPEND | O_CREAT, 0666);
+	log_fd = open(device->logFilename, O_CREAT | O_APPEND | O_WRONLY, 0666);
+
+#ifdef	ES_DEBUG_MODE
+	// printf("FD for log file is %d\n", log_fd);
+#endif
+
 	if(log_fd < 0) {
 #ifdef	ES_DEBUG_MODE
 		printf("Failed to open log file %s\n", device->logFilename);
@@ -222,10 +249,11 @@ int es_logString(UART_DEVICE *device, char *string)
 	}
 
 	// Write string to file
-	rc = write(log_fd, string, strlen(str));
+	rc = write(log_fd, string, strlen(string));
 	if(rc < 0) {
 #ifdef	ES_DEBUG_MODE
 		printf("Failed to write to log file %s\n", device->logFilename);
+		perror("Failed to write to file");
 		return rc;
 #endif
 	}
@@ -267,8 +295,7 @@ int es_generateLogFilename(char *buf, int bufSize, char *subsystem) {
 			currentTime.tm_year + 1900,
 			currentTime.tm_hour,
 			currentTime.tm_min,
-			currentTime.tm_sec,
-			exposure);
+			currentTime.tm_sec);
 
 	// Return length of the new string
 	return charsWritten;

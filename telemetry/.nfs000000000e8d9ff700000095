@@ -14,8 +14,6 @@
  *
  ****************************************************************************/
 
-#include "../es_control.h"
-
 #include "telemetry.h"
 
 #include <stdio.h>
@@ -24,13 +22,12 @@
 
 int telemetry_init(){
 
-	wiringPiSetup();
-	mcp3004Setup(ADC_CHAN, SPI_CHAN);
+wiringPiSetup();
+mcp3004Setup(ADC_CHAN, SPI_CHAN);
 
 #ifdef ES_DEBUG_MODE
-	printf("Initialized SPI for telemetry\n");
+printf("Starting ADC test:\n\n");
 #endif
-	return 0;
 }
 
 
@@ -109,6 +106,8 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
       
 	return 0;
 
-} // Function telemetry_allRead
+} // Function telemetry_pressureRead
+
+
 
 

@@ -18,12 +18,22 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /**** Function main ****
  * Test for the telemetry software.
  */
 int main() {
 
+	TELEMETRY_DATA telemetry;
+	int i;
+
+	telemetry_init();
+
+	for(i = 0; i < 10; i++) {
+		telemetry_allRead(&telemetry);
+		usleep(1000000);
+	}
 
 	return 0;
 

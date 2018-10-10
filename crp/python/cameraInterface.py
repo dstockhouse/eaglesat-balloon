@@ -13,8 +13,8 @@
 #           Reads and Uses Data from Device
 #
 #   Serial Ports:
-#       GPIO Pin 14 - uCam Pin 3 - Data     '/dev/ttyS0'
-#       GPIO Pin 15 - uCam Pin 2 - Control  '/dev/ttyS0'
+#       GPIO Pin 14 - uCam Pin 3 - Data     '/dev/ttyAMA0'
+#       GPIO Pin 15 - uCam Pin 2 - Control  '/dev/ttyAMA0'
 #       GPIO Pin 18 - uCam Pin 5 - Reset    
 #
 #   Commands:
@@ -41,7 +41,7 @@ import os
 
 #Define Serial Connection, Automaticly Set to 9600 Baud, 8 Bits, No Parity,
 #and One Stopbit
-serialC = serial.Serial('/dev/ttyS0')
+serialC = serial.Serial('/dev/ttyAMA0')
 
 #Activate Read Script
 os.system('python serialRead.py')
@@ -138,15 +138,16 @@ def serialCmd(command):
         print("Invalid Command")
     pass
 
-def takePic(num,delay):
+def takePic(num,delay, filename):
         i = 0
+        open(filename, 'wb');
         while i < num:
                 #Take Picture
                 serialC.write(b'\xAA\x04\x02\x00\x00\x00')
                 print("Taking Image " + str(i + 1) + " Out of " + str(num))
                 
                 #Wait for Data
-                time.sleep(120)
+                #time.sleep(120)
 
                 #Thanks Camera
                 serialC.write(b'\xAA\x0E\x0D\x00\x00\x00')
@@ -162,7 +163,8 @@ def serialClose():
     serialC.close()
     pass
 
-#Run Camera
-serialInit()
-takePic(3,1)
-serialClose()
+if __name__ == "__main__":
+    #Run Camera
+    serialInit()
+    takePic(3,1)
+    serialClose()

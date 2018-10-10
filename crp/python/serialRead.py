@@ -1,17 +1,18 @@
 import serial
 
-#Open Serial Port
-serialPort = serial.Serial('/dev/ttyS0', timeout = 1)
+def crp_imageGet(filename):
 
-#Open Txt File
-output = open('data.raw', 'wb')
+    #Open Serial Port
+    serialPort = serial.Serial('/dev/ttyAMA0', timeout = 1)
 
-i = 0
-while i < 1000:
-    i = i + 1
+    #Open Txt File
+    output = open(filename, 'wb')
+
     text = serialPort.readline()
     line = 'line: ' + str(i)
     print(line)
     print(text)
     output.write(text)
-output.close()
+
+    output.close()
+

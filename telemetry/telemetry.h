@@ -36,6 +36,8 @@
 #define TELEMETRY_TEMP_SENSOR_MDE	5
 #define TELEMETRY_TEMP_SENSOR_COMMS	6
 
+#define TELEMETRY_PRESSURE_SENSOR_CHAN	7
+
 // Indices for each pressure sensor
 #define ADC_CHAN 100
 #define SPI_CHAN 0
@@ -56,10 +58,6 @@ typedef struct {
 } TELEMETRY_DATA;
 
 int telemetry_allRead(TELEMETRY_DATA *);
-
-int telemetry_pressureRead(float *);
-
-int telemetry_tempRead(float *, int);
 
 int telemetry_init();
 

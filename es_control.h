@@ -21,10 +21,10 @@
 
 // User application header files
 
-#include "comms/comms.h"
-#include "crp/crp.h"
-#include "crp/crp_generateFilename.h"
-#include "mde/mde.h"
+// #include "comms/comms.h"
+// #include "crp/crp.h"
+// #include "crp/crp_generateFilename.h"
+// #include "mde/mde.h"
 #include "telemetry/telemetry.h"
 
 
@@ -35,6 +35,9 @@
 
 // Constants
 #define ES_DEBUG_MODE
+#define ES_DEBUG_NO_CRP
+// #define ES_DEBUG_NO_COMMS
+// #define ES_DEBUG_NO_MDE
 
 #define MAX_COMMS_PACKET_SIZE	1024
 
@@ -73,8 +76,22 @@ typedef struct {
  * metadata from the payloads
  */
 int es_generateCommsPacket(char *packet, int bufferLength,
-		int *tempData, int pressureData,
-		char *crpMetadata, char *mdeMetadata);
+		struct timespec *missionTime,
+		TELEMETRY_DATA *telemetry,
+		METADATA *crpData,
+		METADATA *mdeData);
+
+int es_timeDifference(struct timespec *stop, struct timespec *start,
+		struct timespec *delta_t);
+
+int es_nsWait(int ns);
+
+int es_uartGetChar(UART_DEVICE *device);
+
+int es_logString(UART_DEVICE *device, char *string);
+
+int es_generateLogFilename(char *buf, int bufSize, char *subsystem);
+
 
 #endif // EAGLESAT_CONTROL_H
 

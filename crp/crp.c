@@ -23,10 +23,12 @@
  ****************************************************************************/
 
 #include "crp.h"
-#include "generateFilename.h"
+#include "crp_generateFilename.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <wiringSerial.h>
 
 
 /**** Function crp_sensorInit ****
@@ -41,22 +43,22 @@ int crp_sensorInit(char *buffer, int bufSize) {
 	// Reset line on GPIO pin
 
 	// SYNC with sensor
-	crp_sensorSync(sensor_fd);
-	serialPutchar(sensor_fd, 
+	// crp_sensorSync(sensor_fd);
+	// serialPutchar(sensor_fd, 
 
 	return sensor_fd;
 
-} // Function crp_sensorRead
+} // Function crp_sensorInit
 
 
 /**** Function crp_sensorSync ****
  * Sends sync command to the sensor
  */
-int crp_sensorInit(char *buffer, int bufSize) {
+int crp_sensorSync(char *buffer, int bufSize) {
 
 	int sensor_fd;
 
-	crp_sensorSendCommand(CRP_COMMAND_SYNC);
+	// crp_sensorSendCommand(CRP_COMMAND_SYNC);
 
 } // Function crp_sensorSync
 
@@ -67,8 +69,11 @@ int crp_sensorInit(char *buffer, int bufSize) {
 int crp_sensorSendCommand(int fd, char *buffer, int bufSize) {
 
 	char command[6];
+	int i;
 
-	serialPutc
+	for(i = 0; i < 6; i++) {
+		serialPutchar(fd, buffer[i]);
+	}
 
 	return 0;
 
