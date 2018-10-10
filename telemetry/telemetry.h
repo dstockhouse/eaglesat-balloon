@@ -22,8 +22,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <wiringPi.h>
-#include <mcp3004.h>
+//#include <wiringPi.h>
+//#include <mcp3004.h>
 
 #define TELEMETRY_NUM_TEMP_SENSORS	7
 
