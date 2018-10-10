@@ -19,10 +19,10 @@ def takePic(num,delay):
                 time.sleep(delay)
 
 #Opens port
-port = serial.Serial('/dev/ttyS0')
+port = serial.Serial('/dev/ttyAMA0')
 print("Serial Open")
 
-#Reset Camera
+#Software Reset Camera
 port.write(b'\xAA\x08\x00\x00\x00\xFF')
 time.sleep(1)
 print("Camera Reset")

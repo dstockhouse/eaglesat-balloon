@@ -30,8 +30,8 @@
 int es_generateCommsPacket(char *packet, int bufferLength,
 		struct timespec *missionTime,
 		TELEMETRY_DATA *telemetry,
-		CRP_METADATA *crpData,
-		MDE_METADATA *mdeData) {
+		METADATA *crpData,
+		METADATA *mdeData) {
 
 	// Length of the packet to be generated
 	int packetLength = 0;
@@ -70,10 +70,40 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 	packetLength--;
 
 	// Put metadata from CRP and MDE into packet
-	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-			"MDE:%d,CRP:%d,", metadata->temp);
+	if(crpData != NULL) {
+		char crpString[16];
 
-	// Put CR as last character instead of '\0'
+		snprintf(crpString, 16, "ic:%d", crpData->crp_imageCount);
+
+		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+				"CRP:%s,", crpString);
+	} else {
+		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+				"nCRP,");
+	}
+
+	packetLength--;
+	
+	if(mdeData != NULL) {
+		char mdeString[16];
+
+		snprintf(mdeString, 16, "in%d:st%d:os%d:cc%d",
+				mdeData->chipsInactive,
+				mdeData->cycleStart,
+				mdeData->cycleOffset,
+				mdeData->cycleCount);
+
+		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+				"MDE:%s,", mdeString);
+
+	} else {
+		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+				"nMDE,");
+	}
+
+	packetLength--;
+
+	// Put CR as last character instead of comma
 	packet[packetLength - 1] = '\r';
 
 	return packetLength;

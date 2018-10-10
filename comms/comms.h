@@ -31,6 +31,8 @@
 
 #define COMMS_COMMAND_START	"K\r"
 #define COMMS_COMMAND_START_LEN	2
+#define COMMS_COMMAND_HEARTBEAT	".\r"
+#define COMMS_COMMAND_HEARTBEAT_LEN	2
 
 int comms_init(void);
 

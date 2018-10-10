@@ -52,23 +52,6 @@ int main() {
 	// Objects for each UART device
 	UART_DEVICE crpDevice, commsDevice, mdeDevice;
 
-	//	// Size of each generated packet to be sent to comms
-	//	int packetSize;
-	//	char commsPacket[MAX_COMMS_PACKET_SIZE];
-	//
-	// // Serial port file descriptors for each UART device
-	// int comms_fd, mde_fd, crp_fd;
-
-	// // Number of input characters available for each UART device
-	// int commsCharsAvail, mdeCharsAvail, crpCharsAvail;
-
-	// // Input buffers for each UART device
-	// char commsInputBuffer[INPUT_BUFFER_LENGTH];
-	// char mdeInputBuffer[INPUT_BUFFER_LENGTH];
-	// char crpInputBuffer[INPUT_BUFFER_LENGTH];
-
-	// // Occupied space in each input buffer
-
 
 	// Telemetry variables
 	// float temperature[TELEMETRY_NUM_TEMP_SENSORS], pressure;
@@ -141,25 +124,27 @@ int main() {
 
 		/***** Services to execute each 1-second cycle *****/
 
-		// Read from CRP sensor
-		rc = crp_sensorRead(imageDataBuf, CRP_IMAGE_BUF_SIZE);
-		if (rc < CRP_IMAGE_SIZE) {
+// 		// Read from CRP sensor
+// 		rc = crp_sensorRead(imageDataBuf, CRP_IMAGE_BUF_SIZE);
+// 		if (rc < CRP_IMAGE_SIZE) {
+// 
+// 			// Not entire image was read
+// #ifdef	ES_DEBUG_MODE
+// 			printf("Only read %d bytes.\n", rc);
+// #endif
+// 
+// 		}
+// 
+// 		// Store image that was read
+// 		rc = crp_imageStore(imageDataBuf, rc);
+// 		if (rc) {
+// #ifdef	ES_DEBUG_MODE
+// 			printf("Didn't successfully store image data.\n");
+// 			return rc;
+// #endif
+// 		}
 
-			// Not entire image was read
-#ifdef	ES_DEBUG_MODE
-			printf("Only read %d bytes.\n", rc);
-#endif
-
-		}
-
-		// Store image that was read
-		rc = crp_imageStore(imageDataBuf, rc);
-		if (rc) {
-#ifdef	ES_DEBUG_MODE
-			printf("Didn't successfully store image data.\n");
-			return rc;
-#endif
-		}
+		// Read CRP sensor using python script
 
 
 		// Read telemetry data
@@ -280,6 +265,9 @@ int main() {
 			}
 
 		} // 30 second cycle counter
+		else {
+			// If no data sent, send heartbeat
+			comms_sendPacket(".\r", 2);
 
 		/***** Services to execute every 15 minutes *****/
 		if (cycleCounter % (15 * 60) == 0 && cycleCount > 0) {
