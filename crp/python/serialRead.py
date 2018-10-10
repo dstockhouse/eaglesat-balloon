@@ -4,10 +4,10 @@ import serial
 serialPort = serial.Serial('/dev/ttyS0', timeout = 1)
 
 #Open Txt File
-output = open('data.txt', 'wb')
+output = open('data.raw', 'wb')
 
 i = 0
-while i < 240:
+while i < 1000:
     i = i + 1
     text = serialPort.readline()
     line = 'line: ' + str(i)
