@@ -153,6 +153,10 @@ int mde_parseData(UART_DEVICE *device) {
 			if(data & (1 << MDE_PACKET_TYPE_BIT)) {
 				// Health packet
 
+				char dataString[64];
+				int chipIndex, rc;
+				struct timespec currentTime;
+
 #ifdef	ES_DEBUG_MODE
 			// printf("Run\n");
 #endif	// ES_DEBUG_MODE
@@ -182,6 +186,27 @@ int mde_parseData(UART_DEVICE *device) {
 						// device->metadata.mde_cycleCount);
 
 #endif	// ES_DEBUG_MODE
+
+				rc = clock_gettime(CLOCK_REALTIME, &currentTime);
+				if(rc) {
+#ifdef	ES_DEBUG_MODE
+					printf("Failed to get time\n");
+					return rc;
+#endif
+				}
+
+				chipIndex = (data >> 20) & 0x07;
+
+				snprintf(dataString, 64, "%d.%09d: MDE metadata: %d %d %d %d\n",
+						(int) currentTime.tv_sec,
+						(int) currentTime.tv_nsec,
+						device->metadata.mde_chipsInactive,
+						device->metadata.mde_cycleStart,
+						device->metadata.mde_cycleOffset,
+						device->metadata.mde_cycleCount);
+
+				// Log to log file
+				es_logString(device, dataString);
 
 			} else {
 

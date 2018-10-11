@@ -86,6 +86,8 @@ int main() {
 	// #endif
 	// 	}
 
+	crpDevice.metadata.crp_started = 0;
+
 #ifndef	ES_DEBUG_NO_COMMS
 	// Initialize UART to COMMS transceiver
 	comms_init(&commsDevice);
@@ -136,7 +138,12 @@ int main() {
 
 	/***** Main program loop *****/
 
+#ifdef	ES_DEBUG_BREAK_LOOP
+	// Break out of loop early
+	while(!abortTest && cycleCount < 45) {
+#else
 	while(!abortTest) {
+#endif
 
 #ifdef	ES_DEBUG_MODE
 		printf("\tStarting loop %d\n", cycleCount);
@@ -223,12 +230,12 @@ int main() {
 			packetSize = es_generateCommsPacket(commsPacket, MAX_COMMS_PACKET_SIZE,
 					&missionElapsedTime,
 					NULL,
-#ifdef	ES_DEBUG_NO_CRP
+#ifndef	ES_DEBUG_NO_CRP
 					&(crpDevice.metadata),
 #else
 					NULL,
 #endif
-#ifdef	ES_DEBUG_NO_MDE
+#ifndef	ES_DEBUG_NO_MDE
 					&(mdeDevice.metadata));
 #else
 					NULL);
@@ -237,7 +244,7 @@ int main() {
 			if (rc) {
 #ifdef	ES_DEBUG_MODE
 				printf("\tCouldn't send COMMS packet.\n");
-				return rc;
+				// return rc;
 #endif
 			}
 
@@ -266,12 +273,13 @@ int main() {
 
 		int pollCount = 0;
 		do {
+			int temp;
 
 			/***** Delay or poll UART channels *****/
 
 // #ifdef	ES_DEBUG_NO_CRP
 // 			// Check for crp input
-// 			while(serialDataAvail(crpDevice.uart_fd)) {
+// 			while(serialDataAvail(crpDevice.uart_fd) > 0) {
 // 				// Read serial input
 // 				rc = es_uartGetChar(&crpDevice);
 // 				if(rc) {
@@ -286,13 +294,14 @@ int main() {
 
 #ifndef	ES_DEBUG_NO_COMMS
 			// Check for comms input
-			while(serialDataAvail(commsDevice.uart_fd)) {
+			while(temp = serialDataAvail(commsDevice.uart_fd) > 0) {
 				// Read serial input
+				printf("%d COMMS bytes available\n", temp);
 				rc = es_uartGetChar(&commsDevice);
 				if(rc) {
 #ifdef	ES_DEBUG_MODE
 					printf("\tFailed to read from COMMS channel\n");
-					return rc;
+					// return rc;
 #endif
 				}
 			}
@@ -301,7 +310,7 @@ int main() {
 
 #ifndef	ES_DEBUG_NO_MDE
 			// Check for MDE input
-			while(serialDataAvail(mdeDevice.uart_fd)) {
+			while(serialDataAvail(mdeDevice.uart_fd) > 0) {
 #ifdef	ES_DEBUG_MODE
 				// printf("\tChars available for MDE\n");
 #endif
@@ -310,7 +319,7 @@ int main() {
 				if(rc) {
 #ifdef	ES_DEBUG_MODE
 					printf("\tFailed to read from MDE channel\n");
-					return rc;
+					// return rc;
 #endif
 				}
 			}
@@ -344,7 +353,7 @@ int main() {
 				if(rc) {
 #ifdef	ES_DEBUG_MODE
 					printf("\tFailed\n");
-					return rc;
+					// return rc;
 #endif
 				}
 			}
@@ -359,7 +368,7 @@ int main() {
 				if(rc) {
 #ifdef	ES_DEBUG_MODE
 					printf("\tFailed\n");
-					return rc;
+					// return rc;
 #endif
 				}
 			}
@@ -399,7 +408,7 @@ int main() {
 			if(rc) {
 #ifdef	ES_DEBUG_MODE
 				printf("Failed to init CRP thread attributes\n");
-				return rc;
+				// return rc;
 #endif
 			}
 
@@ -408,18 +417,19 @@ int main() {
 			if(rc) {
 #ifdef	ES_DEBUG_MODE
 				printf("Failed to create CRP thread\n");
-				return rc;
+				// return rc;
 #endif
 			}
 
 			crpThreadDispatched = 1;
+			crpDevice.metadata.crp_started = 1;
 
 			// Bye fam
 			rc = pthread_detach(crpThread);
 			if(rc) {
 #ifdef	ES_DEBUG_MODE
 				printf("Failed to detach CRP thread\n");
-				return rc;
+				// return rc;
 #endif
 			}
 		}
@@ -436,12 +446,15 @@ void *crp_cameraReadPythonThread(void *params) {
 
 	int rc;
 
-	rc = system("python /home/pi/balloon/crp/picamera/crp_imageCapture.py");
-	if(rc) {
+	while(1) {
+
+		rc = system("python /home/pi/balloon/crp/picamera/crp_imageCapture.py");
+		if(rc) {
 #ifdef	ES_DEBUG_MODE
-		printf("Failed to start python script\n");
-		return rc;
+			printf("Failed to start python script\n");
+			// return rc;
 #endif
+		}
 	}
 
 	pthread_exit(NULL);

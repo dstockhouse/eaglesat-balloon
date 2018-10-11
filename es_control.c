@@ -80,17 +80,13 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 // 	}
 
 	// Put metadata from CRP and MDE into packet
-// 	if(crpData != NULL) {
-// 		char crpString[32];
-// 
-// 		snprintf(crpString, 32, "ic:%d ", crpData->crp_imageCount);
-// 
-// 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-// 				"CRP:%s, ", crpString);
-// 	} else {
-// 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-// 				"nCRP, ");
-// 	}
+ 	if(crpData != NULL) {
+ 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+ 				"CRP:%d, ", crpData->crp_started);
+ 	} else {
+ 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+ 				"nCRP, ");
+ 	}
 //
 //	if(packet[packetLength - 1] == '\0') {
 //		packetLength--;

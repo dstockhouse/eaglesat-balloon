@@ -35,9 +35,10 @@
 
 // Constants
 #define ES_DEBUG_MODE
+#define ES_DEBUG_BREAK_LOOP
 // #define ES_DEBUG_NO_CRP
-#define ES_DEBUG_NO_COMMS
-#define ES_DEBUG_NO_MDE
+// #define ES_DEBUG_NO_COMMS
+// #define ES_DEBUG_NO_MDE
 
 #define MAX_COMMS_PACKET_SIZE	1024
 
@@ -56,6 +57,8 @@ typedef struct {
 // 	char crp_imageFilename[CRP_FILENAME_SIZE];
 // 	int crp_image_fd;
 // 	int crp_synced;
+	int crp_started;
+
 	// MDE
 	int mde_chipsInactive;
 	int mde_cycleStart;
