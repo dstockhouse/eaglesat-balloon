@@ -27,7 +27,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define COMMS_SERIAL_DEVICE	"/dev/ttySOFT0"
+// #define COMMS_SERIAL_DEVICE	"/dev/ttySOFT0"
+#define COMMS_SERIAL_DEVICE	"/dev/ttyUSB0"
 #define COMMS_SERIAL_BAUDRATE	1200
 
 #define COMMS_COMMAND_START	"K\r"
@@ -40,6 +41,8 @@ int comms_parseData(UART_DEVICE *);
 int comms_init(UART_DEVICE *);
 
 int comms_sendPacket(int fd, char *buffer, int bufSize);
+
+int comms_softUartInit(void);
 
 #endif // EAGLESAT_COMMS_H
 

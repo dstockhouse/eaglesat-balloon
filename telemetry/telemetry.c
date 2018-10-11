@@ -19,11 +19,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <wiringPi.h>
+#include <mcp3004.h>
+
 
 int telemetry_init(){
 
-	//wiringPiSetup();
-	//mcp3004Setup(ADC_CHAN, SPI_CHAN);
+	wiringPiSetup();
+	mcp3004Setup(ADC_CHAN, SPI_CHAN);
 
 #ifdef ES_DEBUG_MODE
 	printf("Starting ADC test:\n\n");
@@ -44,8 +47,8 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 	float resist[TELEMETRY_NUM_TEMP_SENSORS];
 
 	// Read pressure on the next channel (i is one higher than temperature sensors)
-	// pressureValue = analogRead(ADC_CHAN | i);
-	pressureValue = 512;
+	pressureValue = analogRead(ADC_CHAN | 7);
+	// pressureValue = 512;
 
 	// According to the pressure sensor datasheet, the pressure
 	// analog output ranges from 10% to 90% the analog range, so the
@@ -88,8 +91,8 @@ int telemetry_allRead(TELEMETRY_DATA* telemetry) {
 	for(i = 0; i < TELEMETRY_NUM_TEMP_SENSORS; i++) {
 
 		//resistance
-		//temp[i] = analogRead(ADC_CHAN | i);
-		temp[i] = 500; //test value for thermistors
+		temp[i] = analogRead(ADC_CHAN | i);
+		// temp[i] = 500; //test value for thermistors
 #ifdef ES_DEBUG_MODE
 		printf("\tTemp %d: %d\n", i, temp[i]);
 #endif

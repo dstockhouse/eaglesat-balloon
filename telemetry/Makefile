@@ -1,6 +1,6 @@
 CC=gcc
-#CFLAGS=-g -Wall -lwiringPi -lm
-CFLAGS=-g -Wall -lm
+CFLAGS=-g -Wall -lwiringPi -lm
+#CFLAGS=-g -Wall -lm
 LIBS=
 DEPS=telemetry.h
 SRCS=telemetry.c main.c

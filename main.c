@@ -306,18 +306,26 @@ int main() {
 			/***** Parse all input data *****/
 
 #ifndef	ES_DEBUG_NO_CRP
-			// rc = crp_parseData(&crpDevice);
-			if(rc) {
+			if(crpDevice.inputBufferSize > 0) {
 #ifdef	ES_DEBUG_MODE
-				printf("\tFailed\n");
-				return rc;
+				printf("%d bytes in crp buffer\n", crpDevice.inputBufferSize);
 #endif
+				rc = crp_parseData(&crpDevice);
+				if(rc) {
+#ifdef	ES_DEBUG_MODE
+					printf("\tFailed\n");
+					return rc;
+#endif
+				}
 			}
 #endif	// ES_DEBUG_NO_CRP
 
 
 #ifndef	ES_DEBUG_NO_COMMS
 			if(commsDevice.inputBufferSize > 0) {
+#ifdef	ES_DEBUG_MODE
+				printf("%d bytes in comms buffer\n", commsDevice.inputBufferSize);
+#endif
 				rc = comms_parseData(&commsDevice);
 				if(rc) {
 #ifdef	ES_DEBUG_MODE

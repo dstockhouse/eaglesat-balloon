@@ -23,10 +23,41 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <wiringSerial.h>
 
-int comms_parseData(UART_DEVICE *comms) {
+int comms_parseData(UART_DEVICE *device) {
+
+	int i, rc;
+
+	i = 0;
+	// Search 8 chars in future for match string
+	while(i < device->inputBufferSize - 8) {
+		rc = strncmp(&(), "<UI>:\r\n", 7);
+		if(!rc){
+			// Packet is either sent here or from the ground
+			if(device->inputBuffer[i + 8] == 'T' || device->inputBuffer[i + 8] == '.' ) {
+				// Echoed by sending to the buffer, so ignore
+			} else if (device->inputBuffer[i + 8] == 'r') {
+				// Reset the board
+#ifdef	ES_DEBUG_MODE
+				printf("Received 'r' command from comms\n");
+				printf("COMMS received ");
+				for(i = 0; i < device->inputBufferSize && device->inputBuffer[i] != '<' && device->inputBuffer[i] != '>'; i++) {
+					printf("%c", device->inputBuffer[i]);
+				}
+#else
+				// Reset the system
+				system("sudo reboot");
+#endif
+			}
+			i += 8;
+		} else {
+			// Doesn't match start of packet
+			i++;
+		}
+	}
 
 	return 0;
 }
@@ -37,6 +68,16 @@ int comms_parseData(UART_DEVICE *comms) {
 int comms_init(UART_DEVICE *device) {
 
 	int uart_fd;
+	int rc;
+
+	// If on reboot, ensure COMMS soft UART device is active
+	rc = comms_softUartInit();
+	if(rc) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to initialize software UART\n");
+		return rc;
+#endif
+	}
 
 	uart_fd = serialOpen(COMMS_SERIAL_DEVICE, COMMS_SERIAL_BAUDRATE);
 
@@ -99,5 +140,35 @@ int comms_sendPacket(int fd, char *buffer, int packetLen) {
 	return i;
 
 } // Function comms_sendPacket
+
+
+/**** Function comms_softUartInit ****
+ * Initializes the soft_uart module if it is not already started. Not general,
+ * this function expects files to be named a certain way for this pi config
+ */
+int comms_softUartInit(void) {
+
+	int i;
+	int rc;
+
+	rc = system("test ! -e /dev/ttySOFT0 -a -e /home/pi/soft_uart/soft_uart.ko");
+	if(rc) {
+#ifdef	ES_DEBUG_MODE
+		printf("Soft UART already initialized\n");
+		return 0;
+#endif
+	}
+
+	rc = system("sudo insmod /home/pi/soft_uart/soft_uart.ko");
+	if(rc) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to start SOFT UART\n");
+		return rc;
+#endif
+	}
+
+	return 0;
+
+} // Function comms_softUartInit
 
 

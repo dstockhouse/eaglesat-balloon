@@ -10,13 +10,15 @@ def takePic(num,delay):
                 print("Taking Image")
                 
                 #Wait for Data
-                time.sleep(140)
+                time.sleep(10)
 
                 #Thanks Camera
                 port.write(b'\xAA\x0E\x0D\x00\x00\x00')
                 print("Data Recived")
                 i = i + 1
                 time.sleep(delay)
+
+#Python serial device
 
 #Opens port
 port = serial.Serial('/dev/ttyAMA0')
@@ -40,7 +42,7 @@ time.sleep(2)
 print("Warmed")
 
 #Initalize Camera
-port.write(b'\xAA\x01\x00\x08\x09\x07')
+port.write(b'\xAA\x01\x00\x03\x09\x07')
 time.sleep(1)
 port.write(b'\xAA\x15\x00\x00\x00\x00')
 time.sleep(1)

@@ -50,6 +50,12 @@
 typedef struct {
 	// CRP
 	int crp_imageCount;
+	int crp_receivingImage;
+	char crp_imageBuf[CRP_IMAGE_SIZE];
+	int crp_imageBufSize;
+	char crp_imageFilename[CRP_FILENAME_SIZE];
+	int crp_image_fd;
+	int crp_synced;
 	// MDE
 	int mde_chipsInactive;
 	int mde_cycleStart;
