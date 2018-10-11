@@ -35,9 +35,9 @@
 
 // Constants
 #define ES_DEBUG_MODE
-#define ES_DEBUG_NO_CRP
-// #define ES_DEBUG_NO_COMMS
-// #define ES_DEBUG_NO_MDE
+// #define ES_DEBUG_NO_CRP
+#define ES_DEBUG_NO_COMMS
+#define ES_DEBUG_NO_MDE
 
 #define MAX_COMMS_PACKET_SIZE	1024
 
@@ -49,13 +49,13 @@
 // Metadata for each UART device
 typedef struct {
 	// CRP
-	int crp_imageCount;
-	int crp_receivingImage;
-	char crp_imageBuf[CRP_IMAGE_SIZE];
-	int crp_imageBufSize;
-	char crp_imageFilename[CRP_FILENAME_SIZE];
-	int crp_image_fd;
-	int crp_synced;
+// 	int crp_imageCount;
+// 	int crp_receivingImage;
+// 	char crp_imageBuf[CRP_IMAGE_SIZE];
+// 	int crp_imageBufSize;
+// 	char crp_imageFilename[CRP_FILENAME_SIZE];
+// 	int crp_image_fd;
+// 	int crp_synced;
 	// MDE
 	int mde_chipsInactive;
 	int mde_cycleStart;

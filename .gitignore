@@ -5,4 +5,5 @@
 *_test
 /examples/*/ex_*
 a.out
+*.png
 *.log

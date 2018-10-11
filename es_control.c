@@ -56,45 +56,45 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 	missionSeconds = missionTime->tv_sec % 60;
 
 	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-			"T:%02d:%02d:%02d,", missionHours, missionMinutes, missionSeconds);
+			"T:%02d:%02d:%02d, ", missionHours, missionMinutes, missionSeconds);
 
 	// Compensate for null character printed
 	if(packet[packetLength - 1] == '\0') {
 		packetLength--;
 	}
 
-	// Put TLM data into packet
-	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-			"Pt:%03.1f:%03.1f:%03.1f,Ot:%03.1f,Ct:%03.1f,Mt:%03.1f,Rt:%03.1f,Pr:%03.1f,", 
-			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS1],
-			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS2],
-			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS3],
-			telemetry->temperature[TELEMETRY_TEMP_SENSOR_OBC],
-			telemetry->temperature[TELEMETRY_TEMP_SENSOR_CRP],
-			telemetry->temperature[TELEMETRY_TEMP_SENSOR_MDE],
-			telemetry->temperature[TELEMETRY_TEMP_SENSOR_COMMS],
-			telemetry->pressure);
-
-	if(packet[packetLength - 1] == '\0') {
-		packetLength--;
-	}
+// 	// Put TLM data into packet
+// 	packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+// 			"Pt:%03.1f:%03.1f:%03.1f,Ot:%03.1f,Ct:%03.1f,Mt:%03.1f,Rt:%03.1f,Pr:%03.1f,", 
+// 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS1],
+// 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS2],
+// 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_EPS3],
+// 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_OBC],
+// 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_CRP],
+// 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_MDE],
+// 			telemetry->temperature[TELEMETRY_TEMP_SENSOR_COMMS],
+// 			telemetry->pressure);
+// 
+// 	if(packet[packetLength - 1] == '\0') {
+// 		packetLength--;
+// 	}
 
 	// Put metadata from CRP and MDE into packet
-	if(crpData != NULL) {
-		char crpString[32];
-
-		snprintf(crpString, 32, "ic:%d", crpData->crp_imageCount);
-
-		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-				"CRP:%s,", crpString);
-	} else {
-		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
-				"nCRP,");
-	}
-
-	if(packet[packetLength - 1] == '\0') {
-		packetLength--;
-	}
+// 	if(crpData != NULL) {
+// 		char crpString[32];
+// 
+// 		snprintf(crpString, 32, "ic:%d ", crpData->crp_imageCount);
+// 
+// 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+// 				"CRP:%s, ", crpString);
+// 	} else {
+// 		packetLength += snprintf(&packet[packetLength], bufferLength - packetLength,
+// 				"nCRP, ");
+// 	}
+//
+//	if(packet[packetLength - 1] == '\0') {
+//		packetLength--;
+//	}
 	
 	if(mdeData != NULL) {
 		char mdeString[32];

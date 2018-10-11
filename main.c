@@ -31,12 +31,16 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <pthread.h>
+
 #include <wiringSerial.h>
 
 // For testing program in debug mode
 // Defined in es_control.h
 // #define	ES_DEBUG_MODE
 
+// Function for the CRP thread
+void *crp_cameraReadPythonThread(void *params);
 
 /**** Function main ****
  * Initializes the two payloads and starts collecting image data. 
@@ -60,6 +64,8 @@ int main() {
 
 	// Time variables
 	struct timespec missionCurrentTime, missionStartTime, missionElapsedTime, currentLoopDuration, currentLoopTime;
+
+	int crpThreadDispatched = 0;
 
 	/***** Check device connections *****/
 
@@ -118,14 +124,14 @@ int main() {
 #endif
 
 	// Initialize SPI to ADC for telemetry sensors
-	rc = telemetry_init();
-	if (rc) {
-		// Initialization failed
-#ifdef	ES_DEBUG_MODE
-		printf("\tCouldn't initialize MCP3008 SPI.\n");
-		return rc;
-#endif
-	}
+//	rc = telemetry_init();
+//	if (rc) {
+//		// Initialization failed
+//#ifdef	ES_DEBUG_MODE
+//		printf("\tCouldn't initialize MCP3008 SPI.\n");
+//		return rc;
+//#endif
+//	}
 
 
 	/***** Main program loop *****/
@@ -162,13 +168,13 @@ int main() {
 
 
 		// Read telemetry data
-		rc = telemetry_allRead(&telemetry);
-		if(rc) {
-#ifdef	ES_DEBUG_MODE
-			printf("\tFailed\n");
-			return rc;
-#endif
-		}
+//		rc = telemetry_allRead(&telemetry);
+//		if(rc) {
+//#ifdef	ES_DEBUG_MODE
+//			printf("\tFailed\n");
+//			return rc;
+//#endif
+//		}
 
 		// 		// Read telemetry sensors
 		// 		rc = telemetry_tempRead(&pressure);
@@ -194,9 +200,9 @@ int main() {
 		// 		if (cycleCount % 3 == 0 && cycleCount > 0) {
 		// #else
 #ifdef	ES_DEBUG_MODE
-		if (cycleCount % 2 == 0 && cycleCount > 0) {
+		if (cycleCount % 5 == 0 && cycleCount > 0) {
 #else
-		if (cycleCount % 30 == 0 && cycleCount > 0) {
+		if (cycleCount % 60 == 0 && cycleCount > 0) {
 #endif	// ES_DEBUG_MODE
 			// #endif	// ES_DEBUG_MODE
 			int packetSize;
@@ -216,10 +222,18 @@ int main() {
 			// Generate packet to send to comms
 			packetSize = es_generateCommsPacket(commsPacket, MAX_COMMS_PACKET_SIZE,
 					&missionElapsedTime,
-					&telemetry,
+					NULL,
+#ifdef	ES_DEBUG_NO_CRP
 					&(crpDevice.metadata),
+#else
+					NULL,
+#endif
+#ifdef	ES_DEBUG_NO_MDE
 					&(mdeDevice.metadata));
-			comms_sendPacket(commsDevice.uart_fd, commsPacket, packetSize);
+#else
+					NULL);
+#endif
+			rc = comms_sendPacket(commsDevice.uart_fd, commsPacket, packetSize);
 			if (rc) {
 #ifdef	ES_DEBUG_MODE
 				printf("\tCouldn't send COMMS packet.\n");
@@ -255,19 +269,19 @@ int main() {
 
 			/***** Delay or poll UART channels *****/
 
-#ifdef	ES_DEBUG_NO_CRP
-			// Check for crp input
-			while(serialDataAvail(crpDevice.uart_fd)) {
-				// Read serial input
-				rc = es_uartGetChar(&crpDevice);
-				if(rc) {
-#ifdef	ES_DEBUG_MODE
-					printf("\tFailed to read from CRP channel\n");
-					return rc;
-#endif	// ES_DEBUG_MODE
-				}
-			}
-#endif	// ES_DEBUG_NO_CRP
+// #ifdef	ES_DEBUG_NO_CRP
+// 			// Check for crp input
+// 			while(serialDataAvail(crpDevice.uart_fd)) {
+// 				// Read serial input
+// 				rc = es_uartGetChar(&crpDevice);
+// 				if(rc) {
+// #ifdef	ES_DEBUG_MODE
+// 					printf("\tFailed to read from CRP channel\n");
+// 					return rc;
+// #endif	// ES_DEBUG_MODE
+// 				}
+// 			}
+// #endif	// ES_DEBUG_NO_CRP
 
 
 #ifndef	ES_DEBUG_NO_COMMS
@@ -305,20 +319,20 @@ int main() {
 
 			/***** Parse all input data *****/
 
-#ifndef	ES_DEBUG_NO_CRP
-			if(crpDevice.inputBufferSize > 0) {
-#ifdef	ES_DEBUG_MODE
-				printf("%d bytes in crp buffer\n", crpDevice.inputBufferSize);
-#endif
-				rc = crp_parseData(&crpDevice);
-				if(rc) {
-#ifdef	ES_DEBUG_MODE
-					printf("\tFailed\n");
-					return rc;
-#endif
-				}
-			}
-#endif	// ES_DEBUG_NO_CRP
+// #ifndef	ES_DEBUG_NO_CRP
+// 			if(crpDevice.inputBufferSize > 0) {
+// #ifdef	ES_DEBUG_MODE
+// 				printf("%d bytes in crp buffer\n", crpDevice.inputBufferSize);
+// #endif
+// 				rc = crp_parseData(&crpDevice);
+// 				if(rc) {
+// #ifdef	ES_DEBUG_MODE
+// 					printf("\tFailed\n");
+// 					return rc;
+// #endif
+// 				}
+// 			}
+// #endif	// ES_DEBUG_NO_CRP
 
 
 #ifndef	ES_DEBUG_NO_COMMS
@@ -365,10 +379,72 @@ int main() {
 
 		} while(currentLoopDuration.tv_sec < 1);
 
+
+		// If 30 minutes into flight, start CRP
+#ifdef	ES_DEBUG_MODE
+		if(missionElapsedTime.tv_sec > (30) && !crpThreadDispatched) {
+#else
+		if(missionElapsedTime.tv_sec > (30 * 60) && !crpThreadDispatched) {
+#endif
+			pthread_t crpThread;
+			pthread_attr_t crpAttr;
+			int rc;
+
+#ifdef	ES_DEBUG_MODE
+			printf("*******************Starting CRP thread*******************\n");
+#endif
+
+			// Initialize attributes. Not really necessary but hey
+			rc = pthread_attr_init(&crpAttr);
+			if(rc) {
+#ifdef	ES_DEBUG_MODE
+				printf("Failed to init CRP thread attributes\n");
+				return rc;
+#endif
+			}
+
+			// Start python thread execution
+			rc = pthread_create(&crpThread, &crpAttr, crp_cameraReadPythonThread, NULL);
+			if(rc) {
+#ifdef	ES_DEBUG_MODE
+				printf("Failed to create CRP thread\n");
+				return rc;
+#endif
+			}
+
+			crpThreadDispatched = 1;
+
+			// Bye fam
+			rc = pthread_detach(crpThread);
+			if(rc) {
+#ifdef	ES_DEBUG_MODE
+				printf("Failed to detach CRP thread\n");
+				return rc;
+#endif
+			}
+		}
+		
 	} // while(!abortTest)
 
 	// End a successful test
 	return 0;
 
 } // Function main()
+
+
+void *crp_cameraReadPythonThread(void *params) {
+
+	int rc;
+
+	rc = system("python /home/pi/balloon/crp/picamera/crp_imageCapture.py");
+	if(rc) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to start python script\n");
+		return rc;
+#endif
+	}
+
+	pthread_exit(NULL);
+
+}
 

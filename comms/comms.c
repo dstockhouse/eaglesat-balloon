@@ -34,7 +34,7 @@ int comms_parseData(UART_DEVICE *device) {
 	i = 0;
 	// Search 8 chars in future for match string
 	while(i < device->inputBufferSize - 8) {
-		rc = strncmp(&(), "<UI>:\r\n", 7);
+		rc = strncmp(&(device->inputBuffer[i]), "<UI>:\r\n", 7);
 		if(!rc){
 			// Packet is either sent here or from the ground
 			if(device->inputBuffer[i + 8] == 'T' || device->inputBuffer[i + 8] == '.' ) {
@@ -137,7 +137,7 @@ int comms_sendPacket(int fd, char *buffer, int packetLen) {
 	printf("\n");
 #endif
 
-	return i;
+	return 0;
 
 } // Function comms_sendPacket
 
