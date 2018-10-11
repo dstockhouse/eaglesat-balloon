@@ -29,7 +29,8 @@
 
 int comms_parseData(UART_DEVICE *device) {
 
-	int i, rc;
+	int i, j, rc;
+	char logBuffer[LOG_BUFFER_LENGTH];
 
 	i = 0;
 	// Search 8 chars in future for match string
@@ -52,9 +53,16 @@ int comms_parseData(UART_DEVICE *device) {
 				system("sudo reboot");
 #endif
 			}
+			for(j = 0; j < 8; j++) {
+				sprintf(&(logBuffer[j]), "%c", device->inputBuffer[i + j]);
+			}
+			es_logString(device, logBuffer);
 			i += 8;
+
 		} else {
 			// Doesn't match start of packet
+			sprintf(logBuffer, "%c", device->inputBuffer[i]);
+			es_logString(device, logBuffer);
 			i++;
 		}
 	}

@@ -106,6 +106,8 @@ int mde_parseData(UART_DEVICE *device) {
 	while(i <= device->inputBufferSize - 6) {
 		int temp;
 
+		char dataString[64];
+
 #ifdef	ES_DEBUG_MODE
 		// printf("Examining ");
 		// printf("%02x %02x %02x %02x %02x %02x \n",
@@ -120,6 +122,16 @@ int mde_parseData(UART_DEVICE *device) {
 		// printf("\tChecking if %d == 0x80\n", device->inputBuffer[i + 1]);
 		// printf("\tChecking if %d == 0x80\n", device->inputBuffer[i + 2]);
 #endif
+		snprintf(dataString, 64, "%02x %02x %02x %02x %02x %02x \n",
+			       	device->inputBuffer[i],
+				device->inputBuffer[i + 1],
+				device->inputBuffer[i + 2],
+				device->inputBuffer[i + 3],
+				device->inputBuffer[i + 4],
+				device->inputBuffer[i + 5]);
+
+		// Log to log file
+		es_logString(device, dataString);
 
 		// Determine if current position is start of a packet
 		if(device->inputBuffer[i] == 0x80 &&
@@ -169,13 +181,13 @@ int mde_parseData(UART_DEVICE *device) {
 				}
 
 				// Get start point index
-				device->metadata.mde_cycleStart += (data >> 11) & 0x0f;
+				device->metadata.mde_cycleStart = (data >> 11) & 0x0f;
 
 				// Get offset point index
-				device->metadata.mde_cycleOffset += (data >> 8) & 0x07;
+				device->metadata.mde_cycleOffset = (data >> 8) & 0x07;
 
 				// Get cycle count
-				device->metadata.mde_cycleCount += data & 0xff;
+				device->metadata.mde_cycleCount = data & 0xff;
 
 #ifdef	ES_DEBUG_MODE
 

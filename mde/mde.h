@@ -31,7 +31,8 @@
 
 // #define MDE_SERIAL_DEVICE	"/dev/ttyUSB0"
 // #define MDE_SERIAL_DEVICE	"/dev/ttyACM0"
-#define MDE_SERIAL_DEVICE	"/dev/ttySOFT0"
+// #define MDE_SERIAL_DEVICE	"/dev/ttySOFT0"
+#define MDE_SERIAL_DEVICE	"/dev/ttyAMA0"
 #define MDE_SERIAL_BAUDRATE	9600
 
 #define MDE_PACKET_LENGTH	6

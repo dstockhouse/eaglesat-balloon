@@ -67,6 +67,9 @@ int main() {
 
 	int crpThreadDispatched = 0;
 
+	char missionLogFilename[LOG_FILENAME_LENGTH];
+	char missionLogBuffer[MISSION_LOG_BUFFER_LENGTH];
+
 	/***** Check device connections *****/
 
 	// Ensure watchdog timer operating
@@ -88,11 +91,20 @@ int main() {
 
 	crpDevice.metadata.crp_started = 0;
 
+	/***** Initialize log filenames *****/
+
+	es_generateLogFilename(missionLogFilename, LOG_FILENAME_LENGTH, "SYS");
+	es_generateLogFilename(crpDevice.logFilename, LOG_FILENAME_LENGTH, "CRP");
+	es_generateLogFilename(commsDevice.logFilename, LOG_FILENAME_LENGTH, "COMMS");
+	es_generateLogFilename(mdeDevice.logFilename, LOG_FILENAME_LENGTH, "MDE");
+
 #ifndef	ES_DEBUG_NO_COMMS
 	// Initialize UART to COMMS transceiver
 	comms_init(&commsDevice);
 	if (commsDevice.uart_fd < 0) {
 		// Initialization failed
+		snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tCouldn't initialize COMMS UART.\n");
+		es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 		printf("\tCouldn't initialize COMMS UART.\n");
 		return commsDevice.uart_fd;
@@ -105,6 +117,8 @@ int main() {
 	mde_init(&mdeDevice);
 	if (mdeDevice.uart_fd < 0) {
 		// Initialization failed
+		snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tCouldn't initialize MDE UART.\n");
+		es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 		printf("\tCouldn't initialize MDE UART.\n");
 		return mdeDevice.uart_fd;
@@ -112,14 +126,15 @@ int main() {
 	}
 #endif	// ES_DEBUG_NO_MDE
 
-	/***** Initialize log filenames *****/
-
-	es_generateLogFilename(crpDevice.logFilename, LOG_FILENAME_LENGTH, "CRP");
-	es_generateLogFilename(commsDevice.logFilename, LOG_FILENAME_LENGTH, "COMMS");
-	es_generateLogFilename(mdeDevice.logFilename, LOG_FILENAME_LENGTH, "MDE");
-
+	snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tLog filenames:\t%s\n\t\t\t%s\n\t\t\t%s\n\t\t\t%s\n\n", 
+			missionLogFilename,
+			crpDevice.logFilename,
+			commsDevice.logFilename,
+			mdeDevice.logFilename);
+	es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef ES_DEBUG_MODE
-	printf("\tLog filenames:\t%s\n\t\t\t%s\n\t\t\t%s\n\n", 
+	printf("\tLog filenames:\t%s\n\t\t\t%s\n\t\t\t%s\n\t\t\t%s\n\n", 
+			missionLogFilename,
 			crpDevice.logFilename,
 			commsDevice.logFilename,
 			mdeDevice.logFilename);
@@ -138,13 +153,17 @@ int main() {
 
 	/***** Main program loop *****/
 
+	es_syslog(missionLogFilename, "Will break out of loop early\n");
 #ifdef	ES_DEBUG_BREAK_LOOP
 	// Break out of loop early
+	printf("Will break out of loop early\n");
 	while(!abortTest && cycleCount < 45) {
 #else
 	while(!abortTest) {
 #endif
 
+		snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tStarting loop %d\n", cycleCount);
+		es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 		printf("\tStarting loop %d\n", cycleCount);
 #endif
@@ -242,16 +261,21 @@ int main() {
 #endif
 			rc = comms_sendPacket(commsDevice.uart_fd, commsPacket, packetSize);
 			if (rc) {
+				snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tCouldn't send COMMS packet.\n");
+				es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 				printf("\tCouldn't send COMMS packet.\n");
 				// return rc;
 #endif
 			}
+			snprintf(missionLogBuffer, 
+					(MISSION_LOG_BUFFER_LENGTH > packetSize)?packetSize:MISSION_LOG_BUFFER_LENGTH,
+					"COMMS packet: %s\n", commsPacket);
 
 			// 30 second cycle counter
 		} else {
 			// If no data sent, send heartbeat
-			comms_sendPacket(commsDevice.uart_fd, ".\r", 2);
+			// comms_sendPacket(commsDevice.uart_fd, ".\r", 2);
 		}
 
 		/***** Services to execute every 15 minutes *****/
@@ -294,11 +318,15 @@ int main() {
 
 #ifndef	ES_DEBUG_NO_COMMS
 			// Check for comms input
-			while(temp = serialDataAvail(commsDevice.uart_fd) > 0) {
+			while((temp = serialDataAvail(commsDevice.uart_fd)) > 0) {
 				// Read serial input
+#ifdef	ES_DEBUG_MODE
 				printf("%d COMMS bytes available\n", temp);
+#endif
 				rc = es_uartGetChar(&commsDevice);
 				if(rc) {
+					snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tFailed to read from COMMS channel. %d bytes avail\n", temp);
+					es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 					printf("\tFailed to read from COMMS channel\n");
 					// return rc;
@@ -317,6 +345,8 @@ int main() {
 				// Read serial input
 				rc = es_uartGetChar(&mdeDevice);
 				if(rc) {
+					snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tFailed to read from MDE channel\n");
+					es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 					printf("\tFailed to read from MDE channel\n");
 					// return rc;
@@ -351,8 +381,10 @@ int main() {
 #endif
 				rc = comms_parseData(&commsDevice);
 				if(rc) {
+					snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tFailed to parse comms data: %d\n", rc);
+					es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
-					printf("\tFailed\n");
+					printf("\tFailed to parse comms data: %d\n", rc);
 					// return rc;
 #endif
 				}
@@ -366,8 +398,10 @@ int main() {
 				// printf("About to parse: array pointer is %p\n", mdeDevice.inputBuffer);
 				rc = mde_parseData(&mdeDevice);
 				if(rc) {
+					snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "\tFailed to parse mde data: %d\n", rc);
+					es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
-					printf("\tFailed\n");
+					printf("\tFailed to parse mde data: %d\n", rc);
 					// return rc;
 #endif
 				}
@@ -399,6 +433,8 @@ int main() {
 			pthread_attr_t crpAttr;
 			int rc;
 
+			snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "*******************Starting CRP thread*******************\n");
+			es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 			printf("*******************Starting CRP thread*******************\n");
 #endif
@@ -406,6 +442,8 @@ int main() {
 			// Initialize attributes. Not really necessary but hey
 			rc = pthread_attr_init(&crpAttr);
 			if(rc) {
+				snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "Failed to init CRP thread attributes\n");
+				es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 				printf("Failed to init CRP thread attributes\n");
 				// return rc;
@@ -415,6 +453,8 @@ int main() {
 			// Start python thread execution
 			rc = pthread_create(&crpThread, &crpAttr, crp_cameraReadPythonThread, NULL);
 			if(rc) {
+				snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "Failed to create CRP thread\n");
+				es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 				printf("Failed to create CRP thread\n");
 				// return rc;
@@ -427,6 +467,8 @@ int main() {
 			// Bye fam
 			rc = pthread_detach(crpThread);
 			if(rc) {
+				snprintf(missionLogBuffer, MISSION_LOG_BUFFER_LENGTH, "Failed to detach CRP thread\n");
+				es_syslog(missionLogFilename, missionLogBuffer);
 #ifdef	ES_DEBUG_MODE
 				printf("Failed to detach CRP thread\n");
 				// return rc;

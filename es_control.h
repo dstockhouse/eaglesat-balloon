@@ -35,7 +35,7 @@
 
 // Constants
 #define ES_DEBUG_MODE
-#define ES_DEBUG_BREAK_LOOP
+// #define ES_DEBUG_BREAK_LOOP
 // #define ES_DEBUG_NO_CRP
 // #define ES_DEBUG_NO_COMMS
 // #define ES_DEBUG_NO_MDE
@@ -44,7 +44,9 @@
 
 #define INPUT_BUFFER_LENGTH	16384
 
-#define LOG_FILENAME_LENGTH	64
+#define LOG_FILENAME_LENGTH	128
+
+#define MISSION_LOG_BUFFER_LENGTH	512
 
 
 // Metadata for each UART device
@@ -96,6 +98,8 @@ int es_timeDifference(struct timespec *stop, struct timespec *start,
 int es_nsWait(int ns);
 
 int es_uartGetChar(UART_DEVICE *device);
+
+int es_syslog(char *filename, char *string);
 
 int es_logString(UART_DEVICE *device, char *string);
 

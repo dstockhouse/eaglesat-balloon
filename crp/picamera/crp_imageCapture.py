@@ -19,7 +19,7 @@ def crp_runContinuous():
     while True:
 
         now = datetime.now()
-        filename = "capture" + str(captureCount) + "-" + str(now.month) + "." + str(now.day) + "." + str(now.year) + "_" + str(now.hour) + ":" + str(now.minute) + ":" + str(now.second) + ".png"
+        filename = "/home/pi/captures/capture" + str(captureCount) + "-" + str(now.month) + "." + str(now.day) + "." + str(now.year) + "_" + str(now.hour) + ":" + str(now.minute) + ":" + str(now.second) + ".png"
 
         # Get lots of images
         camera.capture(filename, format = 'png')

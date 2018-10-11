@@ -120,6 +120,8 @@ int es_generateCommsPacket(char *packet, int bufferLength,
 	// Put CR as last character instead of comma
 	packet[packetLength - 1] = '\r';
 
+	packet[packetLength] = '\0';
+
 	return packetLength;
 }
 
@@ -216,6 +218,56 @@ int es_uartGetChar(UART_DEVICE *device)
 }
 
 
+/**** Function es_syslog ****
+ * Logs a string into a device
+ */
+int es_syslog(char *filename, char *string)
+{
+	int log_fd;
+	int rc;
+
+	if(filename == NULL) {
+		printf("NULL filename for syslog\n");
+		return -1;
+	}
+
+	// Open log file to append to, creating if necessary
+	// log_fd = open(device->logFilename, O_APPEND | O_CREAT, 0666);
+	log_fd = open(filename, O_CREAT | O_APPEND | O_WRONLY, 0666);
+
+#ifdef	ES_DEBUG_MODE
+	// printf("FD for log file is %d\n", log_fd);
+#endif
+
+	if(log_fd < 0) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to open log file %s\n", filename);
+		return log_fd;
+#endif
+	}
+
+	// Write string to file
+	rc = write(log_fd, string, strlen(string));
+	if(rc < 0) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed to write to log file %s\n", filename);
+		perror("Failed to write to file");
+		return rc;
+#endif
+	}
+
+	rc = close(log_fd);
+	if(rc) {
+#ifdef	ES_DEBUG_MODE
+		printf("Failed\n");
+		return rc;
+#endif
+	}
+
+	return 0;
+}
+
+
 /**** Function es_logString ****
  * Logs a string into a device
  */
@@ -284,7 +336,7 @@ int es_generateLogFilename(char *buf, int bufSize, char *subsystem) {
 
 	// Create filename using date/time and exposure length
 	charsWritten = snprintf(buf, bufSize, 
-			"%s-%02d.%02d.%04d_%02d:%02d:%02d.log",
+			"/home/pi/logs/%s-%02d.%02d.%04d_%02d:%02d:%02d.log",
 			subsystem,
 			currentTime.tm_mon + 1,
 			currentTime.tm_mday,
