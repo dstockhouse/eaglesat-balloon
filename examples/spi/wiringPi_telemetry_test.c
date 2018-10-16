@@ -23,7 +23,7 @@
 
 #define ADC_CHAN 100
 #define SPI_CHAN 0
-#define NUM_TEMP_SENSORS	7
+#define NUM_TEMP_SENSORS	0
 
 // Maximum range of the pressure sensor, in PSI
 #define MAX_PRESSURE_RANGE_PSI	15
@@ -55,7 +55,7 @@ int main()
 		}
 
 		// Read pressure on the next channel (i is one higher than temperature sensors)
-		pressureValue = analogRead(ADC_CHAN | i);
+		pressureValue = analogRead(ADC_CHAN | 0x00);
 
 		// According to the pressure sensor datasheet, the pressure
 		// analog output ranges from 10% to 90% the analog range, so the
