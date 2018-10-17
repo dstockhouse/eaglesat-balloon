@@ -34,7 +34,8 @@
 
 
 // Constants
-#define ES_DEBUG_MODE
+#undef	ES_DEBUG_MODE
+// #define ES_DEBUG_MODE
 // #define ES_DEBUG_BREAK_LOOP
 // #define ES_DEBUG_NO_CRP
 // #define ES_DEBUG_NO_COMMS

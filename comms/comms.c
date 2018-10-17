@@ -30,10 +30,11 @@
 int comms_parseData(UART_DEVICE *device) {
 
 	int i, j, rc;
-	char logBuffer[LOG_BUFFER_LENGTH];
+	char logBuffer[MISSION_LOG_BUFFER_LENGTH];
 
 	i = 0;
 	// Search 8 chars in future for match string
+	// Won't be able to tell if it is from ground or echoed back from us
 	while(i < device->inputBufferSize - 8) {
 		rc = strncmp(&(device->inputBuffer[i]), "<UI>:\r\n", 7);
 		if(!rc){

@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 #include <pthread.h>
 
@@ -150,6 +151,9 @@ int main() {
 //#endif
 //	}
 
+
+	// Test COMMS
+	comms_sendPacket(commsDevice.uart_fd, "EAGLESAT 2 BALLOON COMMS TEST\r", strlen("EAGLESAT 2 BALLOON COMMS TEST\r"));
 
 	/***** Main program loop *****/
 
@@ -318,10 +322,10 @@ int main() {
 
 #ifndef	ES_DEBUG_NO_COMMS
 			// Check for comms input
-			while((temp = serialDataAvail(commsDevice.uart_fd)) > 0) {
+			while((temp = serialDataAvail(commsDevice.uart_fd)) > 0 && commsDevice.inputBufferSize < INPUT_BUFFER_LENGTH) {
 				// Read serial input
 #ifdef	ES_DEBUG_MODE
-				printf("%d COMMS bytes available\n", temp);
+				// printf("%d COMMS bytes available\n", temp);
 #endif
 				rc = es_uartGetChar(&commsDevice);
 				if(rc) {
@@ -338,7 +342,7 @@ int main() {
 
 #ifndef	ES_DEBUG_NO_MDE
 			// Check for MDE input
-			while(serialDataAvail(mdeDevice.uart_fd) > 0) {
+			while(serialDataAvail(mdeDevice.uart_fd) > 0 && mdeDevice.inputBufferSize < INPUT_BUFFER_LENGTH) {
 #ifdef	ES_DEBUG_MODE
 				// printf("\tChars available for MDE\n");
 #endif
@@ -377,7 +381,7 @@ int main() {
 #ifndef	ES_DEBUG_NO_COMMS
 			if(commsDevice.inputBufferSize > 0) {
 #ifdef	ES_DEBUG_MODE
-				printf("%d bytes in comms buffer\n", commsDevice.inputBufferSize);
+				// printf("%d bytes in comms buffer\n", commsDevice.inputBufferSize);
 #endif
 				rc = comms_parseData(&commsDevice);
 				if(rc) {
@@ -427,7 +431,8 @@ int main() {
 #ifdef	ES_DEBUG_MODE
 		if(missionElapsedTime.tv_sec > (30) && !crpThreadDispatched) {
 #else
-		if(missionElapsedTime.tv_sec > (30 * 60) && !crpThreadDispatched) {
+		// if(missionElapsedTime.tv_sec > (15 * 60) && !crpThreadDispatched) {
+		if(missionElapsedTime.tv_sec > 5 && !crpThreadDispatched) {
 #endif
 			pthread_t crpThread;
 			pthread_attr_t crpAttr;
